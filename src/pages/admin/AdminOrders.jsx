@@ -1,11 +1,10 @@
 // src/pages/admin/AdminOrders.jsx
-// Loads orders from Firebase in real-time. Falls back to localStorage.
+// Loads orders from the API and falls back to localStorage if the backend is unavailable.
 
 import { useState, useEffect, useMemo } from "react";
 import { Search, Loader } from "lucide-react";
 import toast from "react-hot-toast";
-import { db } from "../../firebase/config";
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { getOrders, updateOrderStatus as apiUpdateOrderStatus, updateOrderTracking as apiUpdateOrderTracking } from "../../services/api";
 
 const STATUSES = ["All", "Pending", "Confirmed", "Shipped", "Delivered"];
 
@@ -20,52 +19,53 @@ const toastStyle = {
 export default function AdminOrders() {
   const [orders, setOrders]             = useState([]);
   const [loading, setLoading]           = useState(true);
-  const [source, setSource]             = useState("local"); // "firebase" | "local"
+  const [source, setSource]             = useState("local"); // "api" | "local"
   const [filterStatus, setFilterStatus] = useState("All");
   const [search, setSearch]             = useState("");
   const [trackingInputs, setTrackingInputs] = useState({});
 
-  // ── Load orders: Firebase first, localStorage fallback ──────
+  // ── Load orders: API first, localStorage fallback ───────────
   useEffect(() => {
-    if (!db) {
-      // Firebase not set up — use localStorage
-      const stored = JSON.parse(localStorage.getItem("bg_orders") || "[]");
-      setOrders(stored);
-      setSource("local");
-      setLoading(false);
-      return;
-    }
+    let isMounted = true;
 
-    setSource("firebase");
-    const q   = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-    const unsub = onSnapshot(q, (snap) => {
-      const list = snap.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-        // Normalize Firestore timestamp to readable date string
-        date: d.data().createdAt?.toDate
-          ? d.data().createdAt.toDate().toLocaleDateString("en-IN")
-          : d.data().date || "—",
-      }));
-      setOrders(list);
-      setLoading(false);
-    }, (err) => {
-      console.warn("Firestore error:", err.message);
-      // Fall back to localStorage
-      const stored = JSON.parse(localStorage.getItem("bg_orders") || "[]");
-      setOrders(stored);
-      setSource("local");
-      setLoading(false);
-    });
+    const loadOrders = async () => {
+      try {
+        const list = await getOrders();
 
-    return () => unsub();
+        if (!isMounted) {
+          return;
+        }
+
+        setOrders(list);
+        setSource("api");
+      } catch (error) {
+        console.warn("API error:", error.message);
+        const stored = JSON.parse(localStorage.getItem("bg_orders") || "[]");
+
+        if (isMounted) {
+          setOrders(stored);
+          setSource("local");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadOrders();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // ── Update order status ──────────────────────────────────────
   const updateStatus = async (id, status) => {
-    if (source === "firebase") {
+    if (source === "api") {
       try {
-        await updateDoc(doc(db, "orders", id), { status, updatedAt: serverTimestamp() });
+        await apiUpdateOrderStatus(id, status);
+        setOrders((prev) => prev.map((order) => (order.id === id ? { ...order, status } : order)));
         toast.success(`Order ${id} → ${status}`, toastStyle);
       } catch (err) {
         toast.error("Update failed: " + err.message);
@@ -84,9 +84,10 @@ export default function AdminOrders() {
     const link = trackingInputs[id] || "";
     if (!link.trim()) { toast.error("Enter a tracking URL first"); return; }
 
-    if (source === "firebase") {
+    if (source === "api") {
       try {
-        await updateDoc(doc(db, "orders", id), { trackingLink: link, updatedAt: serverTimestamp() });
+        await apiUpdateOrderTracking(id, link);
+        setOrders((prev) => prev.map((order) => (order.id === id ? { ...order, trackingLink: link } : order)));
         toast.success("Tracking link saved!", toastStyle);
       } catch (err) {
         toast.error("Failed: " + err.message);
@@ -137,8 +138,8 @@ export default function AdminOrders() {
         </h1>
         <p style={{ fontSize: "0.73rem", color: "var(--ink-faint)", marginTop: "2px", fontFamily: "'Jost', sans-serif" }}>
           {orders.length} total ·{" "}
-          <span style={{ color: source === "firebase" ? "var(--green)" : "var(--gold)" }}>
-            {source === "firebase" ? "🔴 Live from Firebase" : "💾 Local storage (connect Firebase)"}
+          <span style={{ color: source === "api" ? "var(--green)" : "var(--gold)" }}>
+            {source === "api" ? "🔴 Live from API" : "💾 Local storage fallback"}
           </span>
         </p>
       </div>

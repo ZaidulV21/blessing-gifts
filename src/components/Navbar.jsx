@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingBag, Menu, X } from "lucide-react";
+import { ShoppingBag, Menu, X, Search } from "lucide-react";
 import { useCart } from "../context/CartContext";
 
 export default function Navbar() {
@@ -11,6 +11,8 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const links = [
     { label: "Home",        path: "/" },
@@ -103,6 +105,23 @@ export default function Navbar() {
 
           {/* ── RIGHT ACTIONS ── */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Search */}
+            <div style={{ position: "relative" }}>
+              {searchOpen ? (
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { navigate(`/shop?q=${encodeURIComponent(searchQuery)}`); setSearchOpen(false); setSearchQuery(""); } }}
+                  placeholder="Search products..."
+                  style={{ width: 220, padding: "8px 10px", borderRadius: 6, border: "1px solid var(--border)", fontFamily: "'Jost', sans-serif" }}
+                />
+              ) : (
+                <button onClick={() => setSearchOpen(true)} title="Search" style={{ width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer' }}>
+                  <Search size={18} color="var(--ink-muted)" />
+                </button>
+              )}
+            </div>
             {/* Admin — desktop only */}
             <button
               onClick={() => navigate("/admin")}

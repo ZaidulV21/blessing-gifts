@@ -1,4 +1,4 @@
-# 🔥 Firebase Setup Guide — Blessing Gifts
+ # 🔥 Firebase Setup Guide — Blessing Gifts
 
 ## Why Firebase?
 Right now products are stored in a static file (`src/data/products.js`).
@@ -113,4 +113,3 @@ service cloud.firestore {
 | "Firebase not configured" error | Make sure .env file is in root folder (same level as package.json) |
 | Image upload fails | Enable Storage in Firebase Console. Check storage rules allow write. |
 | Orders not appearing in admin | Check Firestore is enabled. Check browser console for error messages. |
-

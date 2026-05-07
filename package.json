@@ -4,7 +4,6 @@
   "private": true,
   "dependencies": {
     "cloudinary": "^2.10.0",
-    "firebase": "^10.14.1",
     "framer-motion": "^11.0.8",
     "lucide-react": "^0.363.0",
     "react": "^18.2.0",
@@ -14,9 +13,11 @@
     "react-scripts": "5.0.1"
   },
   "scripts": {
+    "dev": "react-scripts start",
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "deploy": "npm run build && firebase deploy"
+    "server": "npm --prefix server run dev",
+    "deploy": "npm run build"
   },
   "browserslist": {
     "production": [

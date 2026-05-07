@@ -1,18 +1,15 @@
 // src/pages/Home.jsx
-// Loads products from Firebase in real-time via useProducts hook
+// Loads products from the API in real-time via useProducts hook
 
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Truck, ShieldCheck, MessageCircle, RotateCcw } from "lucide-react";
 import { useProducts } from "../hooks/useProducts";
 import { CATEGORIES } from "../data/products";
 import ProductCard from "../components/ProductCard";
-import ProductModal from "../components/ProductModal";
 
 export default function Home() {
   const navigate = useNavigate();
   const { products } = useProducts();
-  const [selectedProduct, setSelected] = useState(null);
 
   const featuredCars = products.filter((p) => p.category === "Toy Cars").slice(0, 4);
   const newArrivals  = products.filter((p) => p.badge === "new").slice(0, 4);
@@ -211,7 +208,7 @@ export default function Home() {
         </div>
         <div className="products-main-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "2px" }}>
           {featuredCars.map((p) => (
-            <ProductCard key={p.id} product={p} onClick={() => setSelected(p)} />
+            <ProductCard key={p.id} product={p} onClick={() => navigate(`/product/${p.id}`)} />
           ))}
         </div>
       </div>
@@ -248,15 +245,10 @@ export default function Home() {
         </div>
         <div className="products-main-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "2px" }}>
           {newArrivals.map((p) => (
-            <ProductCard key={p.id} product={p} onClick={() => setSelected(p)} />
+            <ProductCard key={p.id} product={p} onClick={() => navigate(`/product/${p.id}`)} />
           ))}
         </div>
       </div>
-
-      {/* Modal */}
-      {selectedProduct && (
-        <ProductModal product={selectedProduct} onClose={() => setSelected(null)} />
-      )}
     </div>
   );
 }

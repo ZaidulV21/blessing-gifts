@@ -1,64 +1,45 @@
 // src/hooks/useOrders.js
-// ─────────────────────────────────────────────────────────────────
-//  Currently reads from localStorage.
-//  To switch to Firebase, uncomment the Firebase version below
-//  and comment out the localStorage version.
-// ─────────────────────────────────────────────────────────────────
+// API-backed orders hook for admin workflows.
+
 import { useState, useEffect } from "react";
-// import { subscribeOrders, updateOrderStatus } from "../firebase/services";
+import { getOrders, updateOrderStatus as apiUpdateOrderStatus, updateOrderTracking as apiUpdateOrderTracking } from "../services/api";
 
 export function useOrders() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    // ── localStorage version (default) ──
-    const load = () => {
+    let isMounted = true;
+
+    const loadOrders = async () => {
       try {
-        setOrders(JSON.parse(localStorage.getItem("bg_orders") || "[]"));
+        const list = await getOrders();
+
+        if (isMounted) {
+          setOrders(list);
+        }
       } catch {
-        setOrders([]);
+        if (isMounted) {
+          setOrders([]);
+        }
       }
     };
-    load();
 
-    // Re-sync if another tab updates orders
-    window.addEventListener("storage", load);
-    return () => window.removeEventListener("storage", load);
+    loadOrders();
 
-    // ── Firebase version (uncomment when ready) ──
-    // const unsub = subscribeOrders(setOrders);
-    // return unsub;
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const saveOrders = (updated) => {
-    setOrders(updated);
-    localStorage.setItem("bg_orders", JSON.stringify(updated));
+  const changeStatus = async (id, status) => {
+    await apiUpdateOrderStatus(id, status);
+    setOrders((prev) => prev.map((order) => (order.id === id ? { ...order, status } : order)));
   };
 
-  const changeStatus = (id, status) => {
-    const updated = orders.map((o) => (o.id === id ? { ...o, status } : o));
-    saveOrders(updated);
-
-    // Firebase version:
-    // updateOrderStatus(id, status);
-  };
-
-  const addTracking = (id, trackingLink) => {
-    const updated = orders.map((o) => (o.id === id ? { ...o, trackingLink } : o));
-    saveOrders(updated);
+  const addTracking = async (id, trackingLink) => {
+    await apiUpdateOrderTracking(id, trackingLink);
+    setOrders((prev) => prev.map((order) => (order.id === id ? { ...order, trackingLink } : order)));
   };
 
   return { orders, changeStatus, addTracking };
-}
-
-// ─────────────────────────────────────────────────────────────────
-// src/hooks/useProducts.js
-// ─────────────────────────────────────────────────────────────────
-// Separate export below — can split into its own file later
-
-export function useProducts() {
-  // Currently returns static data from products.js
-  // When Firebase is connected, fetch from Firestore instead
-  const { PRODUCTS } = require("../data/products");
-  return { products: PRODUCTS };
 }

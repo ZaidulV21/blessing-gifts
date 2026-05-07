@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
+import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
@@ -46,6 +47,10 @@ export default function App() {
             <Route
               path="/shop"
               element={<CustomerLayout><Shop /></CustomerLayout>}
+            />
+            <Route
+              path="/product/:productId"
+              element={<CustomerLayout><ProductDetails /></CustomerLayout>}
             />
             <Route
               path="/cart"

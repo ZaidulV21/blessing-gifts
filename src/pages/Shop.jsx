@@ -1,12 +1,11 @@
 // src/pages/Shop.jsx
-// Loads products from Firebase in real-time via useProducts hook
+// Loads products from the API in real-time via useProducts hook
 
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Loader } from "lucide-react";
 import { useProducts } from "../hooks/useProducts";
 import ProductCard from "../components/ProductCard";
-import ProductModal from "../components/ProductModal";
 
 const ALL_CATS  = ["All", "Toy Cars", "Showpieces", "Soft Toys", "Gift Sets"];
 const SORT_OPTS = [
@@ -18,11 +17,11 @@ const SORT_OPTS = [
 
 export default function Shop() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { products, loading } = useProducts();
 
   const [activeCat, setActiveCat]       = useState("All");
   const [sort, setSort]                 = useState("featured");
-  const [selectedProduct, setSelected]  = useState(null);
 
   // Pre-select category from navigation state or query string
   useEffect(() => {
@@ -36,8 +35,16 @@ export default function Shop() {
     }
   }, [location.search, location.state]);
 
+  const q = new URLSearchParams(location.search).get("q")?.trim().toLowerCase();
+
   const filtered = products
-    .filter((p) => activeCat === "All" || p.category === activeCat)
+    .filter((p) => {
+      if (q) {
+        const hay = `${p.name} ${p.description} ${p.category}`.toLowerCase();
+        return hay.includes(q);
+      }
+      return activeCat === "All" || p.category === activeCat;
+    })
     .sort((a, b) => {
       if (sort === "price_asc")  return a.price - b.price;
       if (sort === "price_desc") return b.price - a.price;
@@ -125,7 +132,7 @@ export default function Shop() {
             <ProductCard
               key={p.id}
               product={p}
-              onClick={() => setSelected(p)}
+              onClick={() => navigate(`/product/${p.id}`)}
             />
           ))}
         </div>
@@ -136,14 +143,6 @@ export default function Shop() {
         <div style={{ textAlign: "center", padding: "5rem 0", color: "var(--ink-faint)", fontFamily: "'Jost', sans-serif", fontSize: "0.85rem" }}>
           No products found in this category.
         </div>
-      )}
-
-      {/* Modal */}
-      {selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          onClose={() => setSelected(null)}
-        />
       )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

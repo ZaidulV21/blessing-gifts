@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { WHATSAPP_NUMBER } from "../data/products";
+import { createOrder } from "../services/api";
 import toast from "react-hot-toast";
 
 export default function Checkout() {
@@ -61,7 +62,7 @@ export default function Checkout() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const placeOrder = () => {
+  const placeOrder = async () => {
     if (!cart.length) {
       toast.error("Your cart is empty!");
       return;
@@ -88,29 +89,37 @@ export default function Checkout() {
     const pin       = val("co-pin");
     const note      = val("co-note");
 
-    const orderId = "BG-" + Math.floor(100000 + Math.random() * 900000);
     const address = [addr1, addr2, city, `${state} - ${pin}`]
       .filter(Boolean)
       .join(", ");
 
-    // Save to Firebase if connected, else localStorage
-    // (Replace with Firebase addOrder() when ready)
-    const orders = JSON.parse(localStorage.getItem("bg_orders") || "[]");
+    let orderId = "";
+
     const orderData = {
-      id: orderId,
-      date: new Date().toLocaleDateString("en-IN"),
-      customer: `${firstName} ${lastName}`,
+      customerName: `${firstName} ${lastName}`,
       phone,
       email,
       address,
-      items: cart.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
-      total,
+      items: cart.map((i) => ({
+        productId: i.id,
+        name: i.name,
+        qty: i.qty,
+        price: i.price,
+        imageUrl: i.imageUrl,
+        category: i.category,
+      })),
+      totalAmount: total,
       payment,
-      status: "Pending",
       note,
     };
-    orders.unshift(orderData);
-    localStorage.setItem("bg_orders", JSON.stringify(orders));
+
+    try {
+      const createdOrder = await createOrder(orderData);
+      orderId = createdOrder.orderId || createdOrder.id;
+    } catch (error) {
+      toast.error(error.message || "Unable to place order right now.");
+      return;
+    }
 
     // Build WhatsApp message
     const msg =
@@ -355,14 +364,3 @@ export default function Checkout() {
     </div>
   );
 }
-
-// NOTE FOR DEVELOPER:
-// To save orders to Firebase instead of localStorage, update placeOrder() in Checkout.jsx:
-//
-// import { addOrder } from "../firebase/services";
-//
-// Replace the localStorage block with:
-//   const firestoreId = await addOrder(orderData);
-//   navigate("/order-success", { state: { orderId: firestoreId || orderId } });
-//
-// This requires making placeOrder() async and wrapping in try/catch.

@@ -1,6 +1,7 @@
 // src/pages/TrackOrder.jsx
 import { useState } from "react";
 import { Search } from "lucide-react";
+import { getOrderStatus } from "../services/api";
 
 const STEPS = ["Pending", "Confirmed", "Shipped", "Delivered"];
 const STEP_ICONS = { Pending: "🕐", Confirmed: "✅", Shipped: "🚚", Delivered: "🎉" };
@@ -10,18 +11,31 @@ export default function TrackOrder() {
   const [order, setOrder] = useState(null);
   const [notFound, setNotFound] = useState(false);
 
-  const track = () => {
+  const track = async () => {
     const q = query.trim();
     if (!q) return;
+
+    try {
+      const found = await getOrderStatus(q);
+
+      if (found) {
+        setOrder(found);
+        setNotFound(false);
+        return;
+      }
+    } catch {
+      // Fall through to the legacy localStorage lookup below.
+    }
+
     const orders = JSON.parse(localStorage.getItem("bg_orders") || "[]");
-    const found = orders.find(
+    const foundLocal = orders.find(
       (o) =>
         o.id === q ||
         o.phone === q ||
         o.phone?.replace(/\D/g, "") === q.replace(/\D/g, "")
     );
-    setOrder(found || null);
-    setNotFound(!found);
+    setOrder(foundLocal || null);
+    setNotFound(!foundLocal);
   };
 
   const curStep = order ? STEPS.indexOf(order.status) : -1;

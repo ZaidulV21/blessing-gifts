@@ -1,55 +1,53 @@
 // src/hooks/useProducts.js
-// Loads products from Firebase Firestore in real-time.
-// Falls back to static data if Firebase is not connected.
+// Loads products from the API and falls back to the static catalog only if the API is unavailable.
 
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
-import { db } from "../firebase/config";
 import { PRODUCTS as STATIC_PRODUCTS } from "../data/products";
+import { getProducts } from "../services/api";
 
 export function useProducts() {
-  const [products, setProducts] = useState(STATIC_PRODUCTS); // show static first
-  const [loading, setLoading]   = useState(true);
-  const [source, setSource]     = useState("static"); // "static" or "firebase"
+  const [products, setProducts] = useState(STATIC_PRODUCTS);
+  const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState("api");
 
   useEffect(() => {
-    // Check if Firebase is properly configured
-    const isConfigured =
-      process.env.REACT_APP_FIREBASE_PROJECT_ID &&
-      process.env.REACT_APP_FIREBASE_PROJECT_ID !== "YOUR_PROJECT_ID";
+    let isMounted = true;
 
-    if (!isConfigured) {
-      // Firebase not connected yet — use static data
-      setLoading(false);
-      setSource("static");
-      return;
-    }
+    const loadProducts = async () => {
+      try {
+        const list = await getProducts();
 
-    // Subscribe to Firestore products collection
-    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(
-      q,
-      (snap) => {
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        if (!isMounted) {
+          return;
+        }
+
         if (list.length > 0) {
           setProducts(list);
-          setSource("firebase");
+          setSource("api");
         } else {
-          // Collection is empty — keep showing static
           setProducts(STATIC_PRODUCTS);
           setSource("static");
         }
-        setLoading(false);
-      },
-      (err) => {
-        console.warn("Firestore error, falling back to static data:", err.message);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        console.warn("API error, falling back to static data:", error.message);
         setProducts(STATIC_PRODUCTS);
         setSource("static");
-        setLoading(false);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    );
+    };
 
-    return () => unsubscribe();
+    loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return { products, loading, source };

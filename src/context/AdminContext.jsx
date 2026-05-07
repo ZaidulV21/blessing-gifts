@@ -6,7 +6,7 @@ const AdminContext = createContext();
 // ─────────────────────────────────────────────────────────────────
 //  ADMIN CREDENTIALS
 //  Change these before going live!
-//  For production: use Firebase Authentication instead.
+//  For production: replace the hardcoded credentials with a proper auth flow.
 // ─────────────────────────────────────────────────────────────────
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "blessing@2025";

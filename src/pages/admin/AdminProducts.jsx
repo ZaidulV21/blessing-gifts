@@ -1,14 +1,10 @@
 // src/pages/admin/AdminProducts.jsx
-// Images: Cloudinary (free alternative to Firebase Storage)
-// Products: Firebase Firestore
+// Images: Cloudinary (free alternative to backend storage)
+// Products: API-backed CRUD
 
 import { useState, useEffect, useRef } from "react";
 import { Plus, Edit2, Trash2, X, Upload, Loader, ExternalLink } from "lucide-react";
-import {
-  collection, addDoc, getDocs, doc,
-  updateDoc, deleteDoc, serverTimestamp,
-} from "firebase/firestore";
-import { db } from "../../firebase/config";
+import { getProducts, createProduct, updateProduct, deleteProduct } from "../../services/api";
 import toast from "react-hot-toast";
 
 const CATEGORIES = ["Toy Cars", "Showpieces", "Soft Toys", "Gift Sets"];
@@ -16,7 +12,7 @@ const CATEGORIES = ["Toy Cars", "Showpieces", "Soft Toys", "Gift Sets"];
 const EMPTY_FORM = {
   name: "", category: "Toy Cars", price: "", mrp: "",
   description: "", badge: "", inStock: true,
-  features: "", imageUrl: "",
+  features: "", imageUrl: "", images: "",
 };
 
 const toastCfg = {
@@ -60,8 +56,10 @@ const uploadToCloudinary = async (file) => {
 // ─────────────────────────────────────────────────────────────
 export default function AdminProducts() {
   const [products, setProducts]           = useState([]);
+  const [selectedRelated, setSelectedRelated] = useState([]); // array of product objects
+  const [relatedQuery, setRelatedQuery] = useState("");
   const [loading, setLoading]             = useState(true);
-  const [firebaseReady, setFirebaseReady] = useState(false);
+  const [backendReady, setBackendReady]   = useState(false);
   const [showForm, setShowForm]           = useState(false);
   const [editingId, setEditingId]         = useState(null);
   const [form, setForm]                   = useState(EMPTY_FORM);
@@ -72,25 +70,23 @@ export default function AdminProducts() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [activeTab, setActiveTab]         = useState("upload"); // "upload" | "url"
   const fileRef = useRef();
+  const addFilesRef = useRef();
+  const [additionalUploadedUrls, setAdditionalUploadedUrls] = useState([]);
+  const [uploadingAdditional, setUploadingAdditional] = useState(false);
 
-  // ── Check Firebase on mount ───────────────────────────────
+  // ── Check backend on mount ────────────────────────────────
   useEffect(() => {
-    if (db) {
-      setFirebaseReady(true);
-      loadProducts();
-    } else {
-      setFirebaseReady(false);
-      setLoading(false);
-    }
+    loadProducts();
   }, []);
 
   const loadProducts = async () => {
-    if (!db) return;
     setLoading(true);
     try {
-      const snap = await getDocs(collection(db, "products"));
-      setProducts(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const list = await getProducts();
+      setProducts(list);
+      setBackendReady(true);
     } catch (err) {
+      setBackendReady(false);
       toast.error("Load failed: " + err.message, toastCfg);
     }
     setLoading(false);
@@ -104,6 +100,8 @@ export default function AdminProducts() {
     setImagePreview("");
     setEditingId(null);
     setActiveTab("upload");
+    setSelectedRelated([]);
+    setAdditionalUploadedUrls([]);
     setShowForm(true);
   };
 
@@ -120,11 +118,19 @@ export default function AdminProducts() {
         ? p.features.join(", ")
         : (p.features || ""),
       imageUrl:    p.imageUrl    || "",
+      images:      Array.isArray(p.images) ? p.images.join(", ") : (p.images || ""),
+      related:     Array.isArray(p.related) ? p.related.join(",") : (p.related || ""),
     });
     setImageFile(null);
     setImagePreview(p.imageUrl || "");
     setEditingId(p.id);
     setActiveTab(p.imageUrl ? "url" : "upload");
+    setAdditionalUploadedUrls([]);
+    // prefill selected related products as objects
+    const sel = Array.isArray(p.related) && p.related.length > 0
+      ? p.related.map((rid) => products.find((pp) => String(pp.id) === String(rid))).filter(Boolean)
+      : [];
+    setSelectedRelated(sel);
     setShowForm(true);
   };
 
@@ -133,6 +139,7 @@ export default function AdminProducts() {
     setEditingId(null);
     setImageFile(null);
     setImagePreview("");
+    setAdditionalUploadedUrls([]);
   };
 
   // ── Image pick (local preview only) ──────────────────────
@@ -146,6 +153,39 @@ export default function AdminProducts() {
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
     set("imageUrl", ""); // clear manual URL
+    set("images", "");
+  };
+
+  // ── Multiple additional images (max total 5) ─────────────────
+  const handleAdditionalFilesPick = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    // auto-upload if Cloudinary configured
+    if (CLOUDINARY_CLOUD_NAME && CLOUDINARY_CLOUD_NAME !== "YOUR_CLOUD_NAME") {
+      setUploadingAdditional(true);
+      try {
+        const canAdd = 5 - additionalUploadedUrls.length;
+        const toUpload = files.slice(0, Math.max(canAdd, 0));
+        for (const file of toUpload) {
+          const url = await uploadToCloudinary(file);
+          setAdditionalUploadedUrls((prev) => [...prev, url].slice(0, 5));
+        }
+        toast.success(`Uploaded ${toUpload.length} additional image${toUpload.length !== 1 ? "s" : ""}`, toastCfg);
+      } catch (err) {
+        toast.error("Upload failed: " + err.message, toastCfg);
+      }
+      setUploadingAdditional(false);
+    } else {
+      toast("Enable Cloudinary to upload images", { ...toastCfg, duration: 3000 });
+    }
+
+    // clear input value to allow re-pick of same files
+    if (addFilesRef.current) addFilesRef.current.value = "";
+  };
+
+  const removeAdditionalAt = (index) => {
+    setAdditionalUploadedUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   // ── Upload image to Cloudinary ────────────────────────────
@@ -169,8 +209,8 @@ export default function AdminProducts() {
 
   // ── Save product ──────────────────────────────────────────
   const handleSave = async () => {
-    if (!db) {
-      toast.error("Firebase not connected. Add .env file and restart.", toastCfg);
+    if (!backendReady) {
+      toast.error("Backend not connected. Check MONGO_URI and API_URL.", toastCfg);
       return;
     }
 
@@ -212,18 +252,31 @@ export default function AdminProducts() {
         features:    form.features
           ? form.features.split(",").map((f) => f.trim()).filter(Boolean)
           : [],
+        image:       finalImageUrl,
         imageUrl:    finalImageUrl,
-        updatedAt:   serverTimestamp(),
+        images: (() => {
+          const pasted = form.images
+            ? form.images.split(/[,\n]/).map((img) => img.trim()).filter(Boolean)
+            : [];
+          const combined = [finalImageUrl, ...(additionalUploadedUrls || []), ...pasted]
+            .filter(Boolean)
+            .filter((image, index, array) => array.indexOf(image) === index);
+          return combined.slice(0, 5);
+        })(),
+          related:     selectedRelated.map((r) => r.id),
+        stock:       form.inStock ? 10 : 0,
+        inStock:     form.inStock,
       };
 
       if (editingId) {
-        await updateDoc(doc(db, "products", editingId), data);
+        await updateProduct(editingId, data);
         toast.success("✓ Product updated!", toastCfg);
       } else {
-        await addDoc(collection(db, "products"), {
+        console.log("[Save] Creating product with data:", { images: data.images, related: data.related, additionalUploadedUrls });
+        await createProduct({
           ...data,
-          rating: 4.5, reviews: 0,
-          createdAt: serverTimestamp(),
+          rating: 4.5,
+          reviews: 0,
         });
         toast.success("✓ Product added!", toastCfg);
       }
@@ -231,16 +284,15 @@ export default function AdminProducts() {
       closeForm();
       loadProducts();
     } catch (err) {
-      console.error(err);
-      toast.error("Save failed: " + err.message, toastCfg);
+      console.error("[AdminProducts] Save error:", err);
+      toast.error("Save failed: " + (err.message || "Unknown error"), toastCfg);
     }
     setSaving(false);
   };
 
   const handleDelete = async (id) => {
-    if (!db) return;
     try {
-      await deleteDoc(doc(db, "products", id));
+      await deleteProduct(id);
       setProducts((prev) => prev.filter((p) => p.id !== id));
       setDeleteConfirm(null);
       toast.success("Product deleted", toastCfg);
@@ -265,7 +317,7 @@ export default function AdminProducts() {
   };
 
   // ── Not connected — show setup guide ──────────────────────
-  if (!firebaseReady) {
+  if (!loading && !backendReady) {
     return (
       <div style={{ padding: "2rem" }}>
         <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.8rem", fontWeight: 400, marginBottom: "1.5rem" }}>
@@ -288,7 +340,7 @@ export default function AdminProducts() {
           </h1>
           <p style={{ fontSize: "0.73rem", color: "var(--ink-faint)", marginTop: "2px", fontFamily: "'Jost', sans-serif" }}>
             {products.length} listings ·{" "}
-            <span style={{ color: "var(--green)" }}>🟢 Firebase connected</span>
+            <span style={{ color: "var(--green)" }}>🟢 API connected</span>
           </p>
         </div>
         <button
@@ -596,6 +648,77 @@ export default function AdminProducts() {
                 />
               </div>
 
+              {/* ── MORE IMAGES ── */}
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={lbl}>Additional Images (max 5)</label>
+                <div style={{ display: "grid", gap: "8px" }}>
+                  <input ref={addFilesRef} type="file" accept="image/*" multiple onChange={handleAdditionalFilesPick} disabled={uploadingAdditional} />
+                  <textarea
+                    value={form.images}
+                    onChange={(e) => set("images", e.target.value)}
+                    placeholder={"Or paste image URLs separated by commas or new lines"}
+                    rows={2}
+                    style={{ ...inp, resize: "vertical", minHeight: "68px" }}
+                  />
+
+                  {/* Uploaded URLs only - no duplicates */}
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    {additionalUploadedUrls.map((u, idx) => (
+                      <div key={u + idx} style={{ width: 70, height: 70, position: "relative", borderRadius: 6, overflow: "hidden", border: "1px solid var(--border)", background: "var(--cream2)" }}>
+                        <img src={u} alt={`uploaded-${idx}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e)=>{e.target.style.display='none'}} />
+                        <button onClick={() => removeAdditionalAt(idx)} style={{ position: "absolute", top: 4, right: 4, background: "rgba(0,0,0,0.5)", border: "none", color: "white", borderRadius: "999px", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "12px" }}>
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <p style={{ fontSize: "0.68rem", color: "var(--ink-faint)", marginTop: "6px", fontFamily: "'Jost', sans-serif" }}>
+                  {additionalUploadedUrls.length}/5 additional images uploaded. The first main image + these appear in the product gallery.
+                </p>
+              </div>
+
+              {/* ── RELATED PRODUCTS ── */}
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={lbl}>Related Products</label>
+                <input
+                  placeholder="Search products by name..."
+                  value={relatedQuery}
+                  onChange={(e) => setRelatedQuery(e.target.value)}
+                  style={inp}
+                />
+                {/* Suggestions */}
+                {relatedQuery && (
+                  <div style={{ border: "1px solid var(--border)", borderRadius: "4px", marginTop: "8px", maxHeight: "160px", overflowY: "auto", background: "white" }}>
+                    {products.filter((pp) => pp.name.toLowerCase().includes(relatedQuery.toLowerCase()) && pp.id !== editingId && !selectedRelated.find((s) => String(s.id) === String(pp.id))).slice(0,8).map((s) => (
+                      <div key={s.id} style={{ padding: "8px 10px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }} onClick={() => { setSelectedRelated((prev) => [...prev, s]); setRelatedQuery(""); }}>
+                        <img src={s.imageUrl} alt={s.name} style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 4 }} onError={(e)=>{e.target.style.display='none'}} />
+                        <div style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9rem", color: "var(--ink)" }}>{s.name}</div>
+                      </div>
+                    ))}
+                    {products.filter((pp) => pp.name.toLowerCase().includes(relatedQuery.toLowerCase()) && pp.id !== editingId && !selectedRelated.find((s) => String(s.id) === String(pp.id))).length === 0 && (
+                      <div style={{ padding: "8px 10px", color: "var(--ink-faint)", fontFamily: "'Jost', sans-serif" }}>No matches</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Selected chips */}
+                {selectedRelated.length > 0 && (
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+                    {selectedRelated.map((r) => (
+                      <div key={r.id} style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 10px", borderRadius: "999px", background: "var(--cream2)", border: "1px solid var(--border)", fontFamily: "'Jost', sans-serif" }}>
+                        <img src={r.imageUrl} alt={r.name} style={{ width: 28, height: 28, objectFit: "cover", borderRadius: 4 }} onError={(e)=>{e.target.style.display='none'}} />
+                        <div style={{ fontSize: "0.86rem", color: "var(--ink)" }}>{r.name}</div>
+                        <button onClick={() => setSelectedRelated((prev) => prev.filter((x) => String(x.id) !== String(r.id)))} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--ink-muted)" }}><X size={14} /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p style={{ fontSize: "0.68rem", color: "var(--ink-faint)", marginTop: "6px", fontFamily: "'Jost', sans-serif" }}>
+                  Add related products to appear on the product details page. Order matters — first item shows first.
+                </p>
+              </div>
+
               {/* ── FEATURES ── */}
               <div style={{ marginBottom: "1rem" }}>
                 <label style={lbl}>Features (comma separated)</label>
@@ -633,13 +756,15 @@ export default function AdminProducts() {
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={saving || uploadingImage}
-                  style={{ flex: 2, padding: "12px", background: (saving || uploadingImage) ? "var(--ink-faint)" : "var(--ink)", color: "white", border: "none", fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "1.5px", textTransform: "uppercase", cursor: (saving || uploadingImage) ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                  disabled={saving || uploadingImage || uploadingAdditional}
+                  style={{ flex: 2, padding: "12px", background: (saving || uploadingImage || uploadingAdditional) ? "var(--ink-faint)" : "var(--ink)", color: "white", border: "none", fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "1.5px", textTransform: "uppercase", cursor: (saving || uploadingImage || uploadingAdditional) ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                 >
                   {saving
                     ? <><Loader size={14} style={{ animation: "spin 1s linear infinite" }} /> Saving...</>
                     : uploadingImage
                     ? <><Loader size={14} style={{ animation: "spin 1s linear infinite" }} /> Uploading image...</>
+                    : uploadingAdditional
+                    ? <><Loader size={14} style={{ animation: "spin 1s linear infinite" }} /> Uploading additional...</>
                     : editingId ? "✓ Save Changes" : "✓ Add Product"
                   }
                 </button>
@@ -661,12 +786,12 @@ export default function AdminProducts() {
   );
 }
 
-// ── Setup Guide (shown when Firebase not connected) ──────────────
+// ── Setup Guide (shown when backend not connected) ──────────────
 function SetupGuide() {
   return (
     <div>
       <div style={{ background: "#FEF9C3", border: "1px solid #FDE047", borderRadius: "4px", padding: "1.2rem 1.4rem", marginBottom: "1.5rem", fontFamily: "'Jost', sans-serif", fontSize: "0.83rem", color: "#713F12" }}>
-        ⚠️ <strong>Firebase not connected.</strong> Follow the steps below to connect.
+        ⚠️ <strong>Backend not connected.</strong> Follow the steps below to connect.
       </div>
 
       <div style={{ background: "white", border: "1px solid var(--border-soft)", borderRadius: "4px", padding: "2rem", maxWidth: "680px" }}>
@@ -674,43 +799,42 @@ function SetupGuide() {
           Step 1 — Run in VS Code Terminal
         </h2>
         <pre style={{ background: "#1a1a2e", color: "#6EE7B7", padding: "1rem", borderRadius: "4px", marginBottom: "1.5rem", fontSize: "0.85rem" }}>
-          npm install firebase
+          cd server
+npm install
+npm run dev
         </pre>
 
         <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.5rem", marginBottom: "0.5rem" }}>
-          Step 2 — Create Firebase Project
+          Step 2 — Create MongoDB Database
         </h2>
         <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.82rem", color: "var(--ink-muted)", lineHeight: 1.75, marginBottom: "1.5rem" }}>
-          Go to <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" style={{ color: "var(--gold)" }}>console.firebase.google.com</a> → Add project → Name it <strong>blessing-gifts</strong> → Create project → ⚙️ gear → Project settings → Your apps → Web app → Register → Copy the config
+          Create a MongoDB Atlas cluster or use a local MongoDB instance, then copy the connection string into <strong>server/.env</strong> as <strong>MONGO_URI</strong>.
         </p>
 
         <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.5rem", marginBottom: "0.5rem" }}>
-          Step 3 — Enable Firestore
+          Step 3 — Start the API
         </h2>
         <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.82rem", color: "var(--ink-muted)", lineHeight: 1.75, marginBottom: "1.5rem" }}>
-          Firebase Console → Build → <strong>Firestore Database</strong> → Create database → Start in test mode → Enable
+          The API runs on <strong>http://localhost:5000</strong> by default. Keep the frontend pointed at <strong>REACT_APP_API_URL</strong> in the root .env file.
         </p>
 
         <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.5rem", marginBottom: "0.5rem" }}>
           Step 4 — Create .env file
         </h2>
         <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.82rem", color: "var(--ink-muted)", marginBottom: "0.5rem" }}>
-          In VS Code root folder (same level as package.json) → New File → name it <strong>.env</strong>
+          In VS Code root folder (same level as package.json) → add <strong>REACT_APP_API_URL</strong> and your Cloudinary values in <strong>.env</strong>.
         </p>
         <pre style={{ background: "#1a1a2e", color: "#6EE7B7", padding: "1rem", borderRadius: "4px", marginBottom: "1.5rem", fontSize: "0.75rem", lineHeight: 1.8 }}>
-{`REACT_APP_FIREBASE_API_KEY=AIzaSyBIvCsCy7NWf48pSVret-LQLeU54G4jHHg
-REACT_APP_FIREBASE_AUTH_DOMAIN=blessing-gifts.firebaseapp.com
-REACT_APP_FIREBASE_PROJECT_ID=blessing-gifts
-REACT_APP_FIREBASE_STORAGE_BUCKET=blessing-gifts.firebaseapp.com
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID=346141472022
-REACT_APP_FIREBASE_APP_ID=1:346141472022:web:8306073c4ebebfc870cc37`}
+{`REACT_APP_API_URL=http://localhost:5000
+REACT_APP_CLOUDINARY_CLOUD_NAME=your_cloud_name
+REACT_APP_CLOUDINARY_UPLOAD_PRESET=your_upload_preset`}
         </pre>
 
         <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.5rem", marginBottom: "0.5rem" }}>
           Step 5 — Restart
         </h2>
         <pre style={{ background: "#1a1a2e", color: "#6EE7B7", padding: "1rem", borderRadius: "4px", marginBottom: "0", fontSize: "0.85rem" }}>
-          {`Ctrl + C    (stop the app)\nnpm start   (restart)`}
+          {`Ctrl + C    (stop the app)\nnpm start   (restart frontend)`}
         </pre>
       </div>
     </div>
