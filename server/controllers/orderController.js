@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
 import Order from "../models/Order.js";
+import {
+  createRazorpayOrder,
+  verifyRazorpaySignature,
+  fetchRazorpayPayment,
+} from "../utils/razorpayUtils.js";
 
 const normalizePhone = (phone = "") => phone.replace(/\D/g, "");
 
@@ -129,6 +134,192 @@ export async function updateOrder(req, res, next) {
     }
 
     res.json(toClientOrder(order));
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Create Razorpay Order - Professional e-commerce payment flow
+ * Step 1: Create order record in DB with "pending" payment status
+ * Step 2: Initialize Razorpay order
+ * Step 3: Return order details and Razorpay order ID to frontend
+ */
+export async function createPaymentOrder(req, res, next) {
+  try {
+    const payload = req.body;
+    const customerName = payload.customerName || payload.customer || "";
+    const phone = payload.phone || "";
+    const address = payload.address || "";
+    const items = Array.isArray(payload.items) ? payload.items : [];
+    const totalAmount = Number(payload.totalAmount ?? payload.total ?? 0);
+    const email = payload.email || "";
+
+    if (!customerName || !phone || !address || !items.length || !totalAmount) {
+      return res.status(400).json({
+        message: "customerName, phone, address, items, and totalAmount are required",
+      });
+    }
+
+    // Generate order ID
+    const orderId = payload.orderId || generateOrderId();
+
+    // Create order in DB with pending payment status
+    const order = await Order.create({
+      orderId,
+      customerName,
+      customer: customerName,
+      phone,
+      phoneDigits: normalizePhone(phone),
+      email,
+      address,
+      items,
+      totalAmount,
+      total: totalAmount,
+      payment: "Razorpay",
+      paymentStatus: "pending", // Payment not yet completed
+      note: payload.note || "",
+      status: "Pending", // Order status separate from payment status
+      trackingLink: "",
+    });
+
+    // Create Razorpay order
+    const razorpayResult = await createRazorpayOrder(
+      totalAmount,
+      orderId,
+      email,
+      phone
+    );
+
+    if (!razorpayResult.success) {
+      // Delete order if Razorpay order creation fails
+      await Order.deleteOne({ _id: order._id });
+      return res.status(400).json({
+        message: "Failed to create payment order",
+        error: razorpayResult.error,
+      });
+    }
+
+    // Update order with Razorpay order ID
+    order.razorpayOrderId = razorpayResult.data.id;
+    await order.save();
+
+    // Return to frontend: order info + Razorpay details
+    res.status(201).json({
+      order: toClientOrder(order),
+      razorpay: {
+        orderId: razorpayResult.data.id,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        amount: razorpayResult.data.amount,
+        currency: razorpayResult.data.currency,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Verify Payment - Professional e-commerce practice
+ * Step 1: Verify Razorpay signature (CRITICAL for security)
+ * Step 2: Fetch payment details from Razorpay API (optional but recommended)
+ * Step 3: Update order status and payment fields
+ * Step 4: Return confirmation to frontend
+ */
+export async function verifyPayment(req, res, next) {
+  try {
+    const {
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      orderId,
+    } = req.body;
+
+    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return res.status(400).json({
+        message: "razorpayOrderId, razorpayPaymentId, and razorpaySignature are required",
+      });
+    }
+
+    // CRITICAL: Verify signature server-side to prevent fraud
+    const isSignatureValid = verifyRazorpaySignature(
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature
+    );
+
+    if (!isSignatureValid) {
+      console.warn(`Payment verification failed for order: ${orderId}`);
+      return res.status(400).json({
+        message: "Payment verification failed. Invalid signature.",
+      });
+    }
+
+    // Optionally fetch latest payment details from Razorpay
+    const paymentDetails = await fetchRazorpayPayment(razorpayPaymentId);
+
+    // Find order and update payment details
+    const order = await Order.findOne({
+      $or: [
+        { orderId },
+        { razorpayOrderId },
+        ...(mongoose.isValidObjectId(orderId) ? [{ _id: orderId }] : []),
+      ],
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Update payment information (idempotency: check if already paid)
+    if (order.paymentStatus !== "completed") {
+      order.razorpayPaymentId = razorpayPaymentId;
+      order.razorpaySignature = razorpaySignature;
+
+      // Only mark as completed if payment is successful
+      if (paymentDetails.success && paymentDetails.data.status === "captured") {
+        order.paymentStatus = "completed";
+        order.status = "Confirmed"; // Auto-confirm order on successful payment
+      } else {
+        order.paymentStatus = "failed";
+      }
+
+      await order.save();
+    }
+
+    res.json({
+      message: "Payment verified successfully",
+      order: toClientOrder(order),
+      paymentStatus: order.paymentStatus,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Handle payment failure callback
+ * Update order status to failed
+ */
+export async function handlePaymentFailure(req, res, next) {
+  try {
+    const { orderId, razorpayOrderId, razorpayPaymentId, reason } = req.body;
+
+    const order = await Order.findOne({
+      $or: [
+        { orderId },
+        { razorpayOrderId },
+        ...(mongoose.isValidObjectId(orderId) ? [{ _id: orderId }] : []),
+      ],
+    });
+
+    if (order) {
+      order.paymentStatus = "failed";
+      order.razorpayPaymentId = razorpayPaymentId;
+      await order.save();
+    }
+
+    res.json({ message: "Payment failure recorded", failureReason: reason });
   } catch (error) {
     next(error);
   }

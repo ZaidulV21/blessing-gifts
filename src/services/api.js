@@ -148,3 +148,46 @@ export async function updateOrderTracking(id, trackingLink) {
 
   return normalizeOrder(order);
 }
+
+/**
+ * Create Razorpay Payment Order
+ * Step 1 in payment flow: Initialize Razorpay order
+ */
+export async function createPaymentOrder(orderData) {
+  const response = await request("/api/orders/payment/create", {
+    method: "POST",
+    body: JSON.stringify(orderData),
+  });
+
+  return {
+    order: normalizeOrder(response.order),
+    razorpay: response.razorpay,
+  };
+}
+
+/**
+ * Verify Razorpay Payment
+ * Step 3 in payment flow: Verify signature and confirm payment
+ */
+export async function verifyRazorpayPayment(paymentData) {
+  const response = await request("/api/orders/payment/verify", {
+    method: "POST",
+    body: JSON.stringify(paymentData),
+  });
+
+  return {
+    order: normalizeOrder(response.order),
+    paymentStatus: response.paymentStatus,
+  };
+}
+
+/**
+ * Handle Payment Failure
+ * Called if payment fails
+ */
+export async function handlePaymentFailure(failureData) {
+  return request("/api/orders/payment/failed", {
+    method: "POST",
+    body: JSON.stringify(failureData),
+  });
+}
