@@ -11,7 +11,7 @@ const STATUSES = ["All", "Pending", "Confirmed", "Shipped", "Delivered"];
 const toastStyle = {
   style: {
     background: "#111010", color: "#fff",
-    fontFamily: "'Jost', sans-serif", fontSize: "0.82rem",
+    fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem",
     borderLeft: "2px solid #B8912A", borderRadius: "2px",
   },
 };
@@ -133,10 +133,10 @@ export default function AdminOrders() {
 
       {/* Header */}
       <div style={{ marginBottom: "1.8rem" }}>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.8rem", fontWeight: 400, color: "var(--ink)" }}>
+        <h1 style={{ fontFamily: "'Lato', 'Open Sans', sans-serif", fontSize: "1.8rem", fontWeight: 400, color: "var(--ink)" }}>
           Orders
         </h1>
-        <p style={{ fontSize: "0.73rem", color: "var(--ink-faint)", marginTop: "2px", fontFamily: "'Jost', sans-serif" }}>
+        <p style={{ fontSize: "0.73rem", color: "var(--ink-faint)", marginTop: "2px", fontFamily: "'Open Sans', sans-serif" }}>
           {orders.length} total ·{" "}
           <span style={{ color: source === "api" ? "var(--green)" : "var(--gold)" }}>
             {source === "api" ? "🔴 Live from API" : "💾 Local storage fallback"}
@@ -148,11 +148,11 @@ export default function AdminOrders() {
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
         <div style={{ display: "flex", border: "1px solid var(--border)", background: "white", flex: 1, minWidth: "200px" }}>
           <Search size={14} style={{ margin: "auto 10px", color: "var(--ink-faint)", flexShrink: 0 }} />
-          <input
+            <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by order ID, name or phone..."
-            style={{ flex: 1, padding: "9px 8px", fontFamily: "'Jost', sans-serif", fontSize: "0.83rem", border: "none", outline: "none", background: "none" }}
+              style={{ flex: 1, padding: "9px 8px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem", border: "none", outline: "none", background: "none" }}
           />
         </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
@@ -160,9 +160,9 @@ export default function AdminOrders() {
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
-              style={{
+                style={{
                 padding: "8px 14px",
-                fontFamily: "'Jost', sans-serif",
+                fontFamily: "'Open Sans', sans-serif",
                 fontSize: "0.68rem", letterSpacing: "1.5px",
                 textTransform: "uppercase",
                 border: `1px solid ${filterStatus === s ? "var(--ink)" : "var(--border)"}`,
@@ -181,7 +181,7 @@ export default function AdminOrders() {
       {loading && (
         <div style={{ textAlign: "center", padding: "4rem", color: "var(--ink-faint)" }}>
           <Loader size={24} style={{ animation: "spin 1s linear infinite", margin: "0 auto 1rem" }} />
-          <p style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.83rem" }}>Loading orders...</p>
+          <p style={{ fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" }}>Loading orders...</p>
         </div>
       )}
 
@@ -192,7 +192,7 @@ export default function AdminOrders() {
             <thead>
               <tr style={{ background: "var(--cream)" }}>
                 {["Order ID","Customer","Phone","Items","Total","Payment","Status","Update Status","Tracking Link"].map((h) => (
-                  <th key={h} style={{ padding: "10px 14px", fontFamily: "'Jost', sans-serif", fontSize: "0.58rem", fontWeight: 500, letterSpacing: "2px", textTransform: "uppercase", color: "var(--ink-faint)", textAlign: "left", borderBottom: "1px solid var(--border-soft)", whiteSpace: "nowrap" }}>
+                  <th key={h} style={{ padding: "10px 14px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.58rem", fontWeight: 500, letterSpacing: "2px", textTransform: "uppercase", color: "var(--ink-faint)", textAlign: "left", borderBottom: "1px solid var(--border-soft)", whiteSpace: "nowrap" }}>
                     {h}
                   </th>
                 ))}
@@ -204,22 +204,22 @@ export default function AdminOrders() {
                   onMouseEnter={(e) => e.currentTarget.style.background = "#FDFCFA"}
                   onMouseLeave={(e) => e.currentTarget.style.background = "white"}
                 >
-                  <td style={{ padding: "12px 14px", fontFamily: "'Jost', sans-serif", fontSize: "0.8rem", fontWeight: 600 }}>{o.id}</td>
-                  <td style={{ padding: "12px 14px", fontFamily: "'Jost', sans-serif", fontSize: "0.82rem" }}>{o.customer}</td>
-                  <td style={{ padding: "12px 14px", fontFamily: "'Jost', sans-serif", fontSize: "0.78rem", color: "var(--ink-muted)" }}>{o.phone}</td>
-                  <td style={{ padding: "12px 14px", fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", color: "var(--ink-muted)", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <td style={{ padding: "12px 14px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.8rem", fontWeight: 600 }}>{o.id}</td>
+                  <td style={{ padding: "12px 14px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem" }}>{o.customer}</td>
+                  <td style={{ padding: "12px 14px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.78rem", color: "var(--ink-muted)" }}>{o.phone}</td>
+                  <td style={{ padding: "12px 14px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.75rem", color: "var(--ink-muted)", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {(o.items || []).map((i) => `${i.name} ×${i.qty}`).join(", ")}
                   </td>
-                  <td style={{ padding: "12px 14px", fontFamily: "'Cormorant Garamond', serif", fontSize: "0.9rem", fontWeight: 400 }}>
+                  <td style={{ padding: "12px 14px", fontFamily: "'Lato', 'Open Sans', sans-serif", fontSize: "0.9rem", fontWeight: 400 }}>
                     ₹{(o.total || 0).toLocaleString()}
                   </td>
-                  <td style={{ padding: "12px 14px", fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", color: "var(--ink-muted)" }}>{o.payment}</td>
+                  <td style={{ padding: "12px 14px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.75rem", color: "var(--ink-muted)" }}>{o.payment}</td>
                   <td style={{ padding: "12px 14px" }}>{statusBadge(o.status || "Pending")}</td>
                   <td style={{ padding: "12px 14px" }}>
-                    <select
+                      <select
                       value={o.status || "Pending"}
                       onChange={(e) => updateStatus(o.id, e.target.value)}
-                      style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", border: "1px solid var(--border)", background: "var(--cream)", padding: "5px 8px", borderRadius: "1px", outline: "none", cursor: "pointer" }}
+                      style={{ fontFamily: "'Open Sans', sans-serif", fontSize: "0.75rem", border: "1px solid var(--border)", background: "var(--cream)", padding: "5px 8px", borderRadius: "1px", outline: "none", cursor: "pointer" }}
                     >
                       {["Pending","Confirmed","Shipped","Delivered"].map((s) => (
                         <option key={s}>{s}</option>
@@ -228,16 +228,16 @@ export default function AdminOrders() {
                   </td>
                   <td style={{ padding: "12px 14px" }}>
                     <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                      <input
+                        <input
                         id={`track_${o.id}`}
                         placeholder="Paste Shiprocket link"
                         defaultValue={o.trackingLink || ""}
                         onChange={(e) => setTrackingInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
-                        style={{ width: "140px", padding: "5px 8px", border: "1px solid var(--border)", fontFamily: "'Jost', sans-serif", fontSize: "0.7rem", background: "var(--cream)", outline: "none", borderRadius: "1px" }}
+                        style={{ width: "140px", padding: "5px 8px", border: "1px solid var(--border)", fontFamily: "'Open Sans', sans-serif", fontSize: "0.7rem", background: "var(--cream)", outline: "none", borderRadius: "1px" }}
                       />
                       <button
                         onClick={() => saveTracking(o.id)}
-                        style={{ background: "var(--gold)", color: "white", border: "none", padding: "5px 12px", fontFamily: "'Jost', sans-serif", fontSize: "0.65rem", letterSpacing: "1px", textTransform: "uppercase", cursor: "pointer", whiteSpace: "nowrap", borderRadius: "1px" }}
+                        style={{ background: "var(--gold)", color: "white", border: "none", padding: "5px 12px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "1px", textTransform: "uppercase", cursor: "pointer", whiteSpace: "nowrap", borderRadius: "1px" }}
                       >
                         Save
                       </button>

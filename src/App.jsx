@@ -6,6 +6,8 @@ import { AdminProvider } from "./context/AdminContext";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { useEffect } from "react";
+import { initAnimateSections } from "./utils/animateSections";
 
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
@@ -33,6 +35,10 @@ function CustomerLayout({ children }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    const cleanup = initAnimateSections();
+    return () => { if (cleanup) cleanup(); };
+  }, []);
   return (
     <BrowserRouter>
       <CartProvider>

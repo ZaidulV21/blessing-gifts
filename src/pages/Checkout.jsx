@@ -70,7 +70,7 @@ export default function Checkout() {
 
     if (!validate()) {
       toast.error("Please fill all required fields correctly.", {
-        style: { fontFamily: "'Jost', sans-serif", fontSize: "0.83rem" },
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" },
       });
       // Scroll to first error
       const firstErr = document.querySelector(".field-error");
@@ -186,23 +186,23 @@ export default function Checkout() {
   );
 
   return (
-    <div className="page-enter max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+    <div className="page-enter max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16 animate-section">
       {/* Header */}
       <div className="mb-8 sm:mb-10">
-        <div className="text-[0.62rem] font-sans tracking-[3px] uppercase text-gold mb-1">
+        <div className="text-[0.62rem] font-sans tracking-[3px] uppercase text-gold mb-1 animate-item">
           Secure
         </div>
-        <h1 className="font-serif text-[2.2rem] sm:text-[2.6rem] font-normal text-ink">
+        <h1 className="font-serif text-[2.2rem] sm:text-[2.6rem] font-normal text-ink animate-item">
           Check<em className="italic font-light">out</em>
         </h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 sm:gap-8 items-start">
         {/* ── LEFT: FORMS ── */}
-        <div>
+        <div className="animate-item">
 
           {/* Customer Details */}
-          <div className="bg-white border border-border-soft p-5 sm:p-7 mb-4 rounded-sm">
+          <div className="bg-white border border-border-soft p-5 sm:p-7 mb-4 rounded-sm animate-item">
             <h3 className="font-serif text-[1.05rem] font-normal text-ink mb-5 pb-4 border-b border-border-soft">
               Customer Details
             </h3>
@@ -217,7 +217,7 @@ export default function Checkout() {
           </div>
 
           {/* Delivery Address */}
-          <div className="bg-white border border-border-soft p-5 sm:p-7 mb-4 rounded-sm">
+          <div className="bg-white border border-border-soft p-5 sm:p-7 mb-4 rounded-sm animate-item">
             <h3 className="font-serif text-[1.05rem] font-normal text-ink mb-5 pb-4 border-b border-border-soft">
               Delivery Address
             </h3>
@@ -245,7 +245,7 @@ export default function Checkout() {
           </div>
 
           {/* Payment */}
-          <div className="bg-white border border-border-soft p-5 sm:p-7 rounded-sm">
+          <div className="bg-white border border-border-soft p-5 sm:p-7 rounded-sm animate-item">
             <h3 className="font-serif text-[1.05rem] font-normal text-ink mb-5 pb-4 border-b border-border-soft">
               Payment Method
             </h3>
@@ -283,7 +283,7 @@ export default function Checkout() {
                 color: "white",
                 border: "none",
                 padding: "15px",
-                fontFamily: "'Jost', sans-serif",
+                fontFamily: "'Open Sans', sans-serif",
                 fontSize: "0.78rem",
                 fontWeight: 500,
                 letterSpacing: "2px",
@@ -304,7 +304,7 @@ export default function Checkout() {
 
         {/* ── RIGHT: ORDER SUMMARY ── */}
         <div
-          className="rounded-sm lg:sticky lg:top-24"
+          className="rounded-sm lg:sticky lg:top-24 animate-item"
           style={{ background: "#111010" }}
         >
           <div className="p-5 sm:p-6">

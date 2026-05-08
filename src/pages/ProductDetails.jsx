@@ -83,7 +83,7 @@ export default function ProductDetails() {
   ];
 
   return (
-    <div className="page-enter" style={{ maxWidth: "1320px", margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
+    <div className="page-enter animate-section" style={{ maxWidth: "1320px", margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.75rem", fontFamily: "'Jost', sans-serif", fontSize: "0.72rem", letterSpacing: "1.6px", textTransform: "uppercase", color: "var(--ink-faint)" }}>
         <button onClick={() => navigate(-1)} style={{ display: "inline-flex", alignItems: "center", gap: "6px", border: "none", background: "none", color: "var(--ink-muted)", cursor: "pointer", padding: 0 }}>
           <ArrowLeft size={14} /> Back
@@ -94,8 +94,8 @@ export default function ProductDetails() {
         <span>{product.name}</span>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "2rem", alignItems: "start" }}>
-        <section style={{ position: "sticky", top: "1rem" }}>
+      <div className="animate-item" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "2rem", alignItems: "start" }}>
+        <section className="animate-item" style={{ position: "sticky", top: "1rem" }}>
           <div style={{ background: "white", border: "1px solid var(--border-soft)", borderRadius: "18px", overflow: "hidden", boxShadow: "0 18px 50px rgba(0,0,0,0.06)" }}>
             <div style={{ aspectRatio: "1 / 1", background: "#f7f4ef" }}>
               <img src={gallery[activeImage] || product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -110,7 +110,7 @@ export default function ProductDetails() {
           </div>
         </section>
 
-        <section style={{ background: "white", border: "1px solid var(--border-soft)", borderRadius: "18px", padding: "1.5rem", boxShadow: "0 18px 50px rgba(0,0,0,0.04)" }}>
+        <section className="animate-item" style={{ background: "white", border: "1px solid var(--border-soft)", borderRadius: "18px", padding: "1.5rem", boxShadow: "0 18px 50px rgba(0,0,0,0.04)" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", marginBottom: "0.85rem" }}>
             <div>
               <div style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.62rem", letterSpacing: "2.5px", textTransform: "uppercase", color: "var(--gold)", marginBottom: "0.5rem" }}>{product.category}</div>
@@ -184,18 +184,18 @@ export default function ProductDetails() {
         </section>
       </div>
 
-      <section style={{ marginTop: "3rem" }}>
+      <section className="animate-section" style={{ marginTop: "3rem" }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "1.25rem", gap: "1rem", flexWrap: "wrap" }}>
           <div>
-            <div style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.62rem", letterSpacing: "3px", textTransform: "uppercase", color: "var(--gold)", marginBottom: "0.45rem" }}>More from this category</div>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.8rem, 3vw, 2.4rem)", fontWeight: 400, color: "var(--ink)", margin: 0 }}>Related products</h2>
+            <div className="animate-item" style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.62rem", letterSpacing: "3px", textTransform: "uppercase", color: "var(--gold)", marginBottom: "0.45rem" }}>More from this category</div>
+            <h2 className="animate-item" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.8rem, 3vw, 2.4rem)", fontWeight: 400, color: "var(--ink)", margin: 0 }}>Related products</h2>
           </div>
-          <button onClick={() => navigate("/shop")} style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", border: "none", background: "none", color: "var(--ink-muted)", cursor: "pointer", fontFamily: "'Jost', sans-serif", letterSpacing: "1.5px", textTransform: "uppercase", fontSize: "0.72rem" }}>
+          <button onClick={() => navigate("/shop")} className="animate-item" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", border: "none", background: "none", color: "var(--ink-muted)", cursor: "pointer", fontFamily: "'Jost', sans-serif", letterSpacing: "1.5px", textTransform: "uppercase", fontSize: "0.72rem" }}>
             View all <ChevronRight size={13} />
           </button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "2px" }}>
+        <div className="animate-item" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "2px" }}>
           {relatedProducts.length > 0 ? relatedProducts.map((item) => (
             <ProductCard key={item.id} product={item} onClick={() => navigate(`/product/${item.id}`)} />
           )) : (

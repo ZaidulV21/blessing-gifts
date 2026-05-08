@@ -41,18 +41,18 @@ export default function TrackOrder() {
   const curStep = order ? STEPS.indexOf(order.status) : -1;
 
   return (
-    <div className="page-enter max-w-[580px] mx-auto px-6 py-20">
+    <div className="page-enter max-w-[580px] mx-auto px-6 py-20 animate-section">
       <div className="bg-white border border-border-soft p-10 rounded-sm">
         <div className="text-center mb-8">
-          <div className="text-[0.62rem] font-sans tracking-[3px] uppercase text-gold mb-3">Order Status</div>
-          <h1 className="font-serif text-[2.2rem] font-normal text-ink mb-2">Track Your Order</h1>
-          <p className="font-sans text-[0.82rem] font-light text-ink-faint">
+          <div className="text-[0.62rem] font-sans tracking-[3px] uppercase text-gold mb-3 animate-item">Order Status</div>
+          <h1 className="font-serif text-[2.2rem] font-normal text-ink mb-2 animate-item">Track Your Order</h1>
+          <p className="font-sans text-[0.82rem] font-light text-ink-faint animate-item">
             Enter your Order ID or registered phone number
           </p>
         </div>
 
         {/* Search */}
-        <div className="flex border border-border overflow-hidden rounded-sm mb-8">
+        <div className="flex border border-border overflow-hidden rounded-sm mb-8 animate-item">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -71,14 +71,14 @@ export default function TrackOrder() {
 
         {/* Not found */}
         {notFound && (
-          <div className="text-center py-6 font-sans text-[0.83rem] text-ink-faint">
+          <div className="text-center py-6 font-sans text-[0.83rem] text-ink-faint animate-item">
             ❌ No order found. Please check your Order ID or phone number.
           </div>
         )}
 
         {/* Result */}
         {order && (
-          <div>
+          <div className="animate-item">
             {/* Order info card */}
             <div className="bg-cream-2 rounded-sm p-4 mb-8 grid grid-cols-3 gap-4">
               {[
@@ -146,7 +146,7 @@ export default function TrackOrder() {
             </div>
 
             {/* WhatsApp support */}
-            <div className="mt-8 pt-6 border-t border-border-soft text-center">
+            <div className="mt-8 pt-6 border-t border-border-soft text-center animate-item">
               <p className="font-sans text-[0.75rem] text-ink-faint mb-3">
                 Need help? Contact us on WhatsApp
               </p>

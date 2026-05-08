@@ -32,7 +32,7 @@ export default function ProductModal({ product, onClose }) {
     toast.success(`${product.name} × ${qty} added to cart`, {
       style: {
         background: "#111010", color: "#fff",
-        fontFamily: "'Jost', sans-serif", fontSize: "0.82rem",
+        fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem",
         borderLeft: "2px solid #B8912A", borderRadius: "2px",
       },
       icon: "✓",

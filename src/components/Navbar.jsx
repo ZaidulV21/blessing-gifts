@@ -53,7 +53,7 @@ export default function Navbar() {
             <div>
               <span
                 style={{
-                  fontFamily: "'Cormorant Garamond', serif",
+                  fontFamily: "'Lato', 'Open Sans', sans-serif",
                   fontSize: "1.25rem",
                   fontWeight: 500,
                   color: "var(--ink)",
@@ -88,7 +88,7 @@ export default function Navbar() {
                   fontSize: "0.72rem",
                   letterSpacing: "1.5px",
                   textTransform: "uppercase",
-                  fontFamily: "'Jost', sans-serif",
+                  fontFamily: "'Open Sans', sans-serif",
                   color: isActive(l.path) ? "var(--gold)" : "var(--ink-muted)",
                   textDecoration: "none",
                   paddingBottom: "4px",
@@ -114,7 +114,7 @@ export default function Navbar() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { navigate(`/shop?q=${encodeURIComponent(searchQuery)}`); setSearchOpen(false); setSearchQuery(""); } }}
                   placeholder="Search products..."
-                  style={{ width: 220, padding: "8px 10px", borderRadius: 6, border: "1px solid var(--border)", fontFamily: "'Jost', sans-serif" }}
+                  style={{ width: 220, padding: "8px 10px", borderRadius: 6, border: "1px solid var(--border)", fontFamily: "'Open Sans', sans-serif" }}
                 />
               ) : (
                 <button onClick={() => setSearchOpen(true)} title="Search" style={{ width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer' }}>
@@ -126,11 +126,11 @@ export default function Navbar() {
             <button
               onClick={() => navigate("/admin")}
               className="nav-admin-btn hidden md:block"
-              style={{
+                style={{
                 fontSize: "0.68rem",
                 letterSpacing: "1px",
                 textTransform: "uppercase",
-                fontFamily: "'Jost', sans-serif",
+                	fontFamily: "'Open Sans', sans-serif",
                 color: "var(--ink-faint)",
                 border: "1px solid var(--border)",
                 background: "none",
@@ -211,7 +211,7 @@ export default function Navbar() {
                   fontSize: "0.82rem",
                   letterSpacing: "1.5px",
                   textTransform: "uppercase",
-                  fontFamily: "'Jost', sans-serif",
+                  fontFamily: "'Open Sans', sans-serif",
                   color: isActive(l.path) ? "var(--gold)" : "var(--ink-muted)",
                   textDecoration: "none",
                 }}
@@ -222,11 +222,11 @@ export default function Navbar() {
             <Link
               to="/admin"
               onClick={closeMenu}
-              style={{
+                style={{
                 fontSize: "0.78rem",
                 letterSpacing: "1.5px",
                 textTransform: "uppercase",
-                fontFamily: "'Jost', sans-serif",
+                  fontFamily: "'Open Sans', sans-serif",
                 color: "var(--ink-faint)",
                 textDecoration: "none",
                 paddingTop: "0.5rem",

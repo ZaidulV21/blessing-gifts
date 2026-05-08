@@ -53,20 +53,21 @@ export default function Shop() {
     });
 
   return (
-    <div className="page-enter" style={{ maxWidth: "1300px", margin: "0 auto", padding: "4rem 1.5rem" }}>
+    <div className="page-enter animate-section" style={{ maxWidth: "1300px", margin: "0 auto", padding: "4rem 1.5rem" }}>
 
       {/* Header */}
       <div style={{ marginBottom: "2.5rem" }}>
-        <div style={{ fontSize: "0.62rem", letterSpacing: "3px", textTransform: "uppercase", color: "var(--gold)", marginBottom: "0.5rem", fontFamily: "'Jost', sans-serif" }}>
+        <div className="animate-item" style={{ fontSize: "0.62rem", letterSpacing: "3px", textTransform: "uppercase", color: "var(--gold)", marginBottom: "0.5rem", fontFamily: "'Jost', sans-serif" }}>
           Collection
         </div>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(2rem,4vw,2.8rem)", fontWeight: 400, color: "var(--ink)" }}>
+        <h1 className="animate-item" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(2rem,4vw,2.8rem)", fontWeight: 400, color: "var(--ink)" }}>
           All <em style={{ fontStyle: "italic", fontWeight: 300 }}>Products</em>
         </h1>
       </div>
 
       {/* Filter Bar */}
       <div
+        className="animate-item"
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}
       >
         {/* Category tabs */}
@@ -110,7 +111,7 @@ export default function Shop() {
       </div>
 
       {/* Count */}
-      <div style={{ fontSize: "0.72rem", color: "var(--ink-faint)", marginBottom: "1.5rem", fontFamily: "'Jost', sans-serif" }}>
+      <div className="animate-item" style={{ fontSize: "0.72rem", color: "var(--ink-faint)", marginBottom: "1.5rem", fontFamily: "'Jost', sans-serif" }}>
         {loading ? "Loading..." : `${filtered.length} product${filtered.length !== 1 ? "s" : ""} found`}
       </div>
 
@@ -125,7 +126,7 @@ export default function Shop() {
       {/* Grid */}
       {!loading && (
         <div
-          className="products-main-grid"
+          className="products-main-grid animate-item"
           style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "2px" }}
         >
           {filtered.map((p) => (

@@ -18,7 +18,7 @@ const EMPTY_FORM = {
 const toastCfg = {
   style: {
     background: "#111010", color: "#fff",
-    fontFamily: "'Jost', sans-serif", fontSize: "0.82rem",
+    fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem",
     borderLeft: "2px solid #B8912A", borderRadius: "2px",
   },
 };
@@ -305,7 +305,7 @@ export default function AdminProducts() {
   const inp = {
     width: "100%", padding: "10px 13px",
     border: "1.5px solid var(--border)", borderRadius: "2px",
-    fontFamily: "'Jost', sans-serif", fontSize: "0.86rem",
+    fontFamily: "'Open Sans', sans-serif", fontSize: "0.86rem",
     background: "var(--cream)", color: "var(--ink)",
     outline: "none", transition: "border-color 0.2s",
   };
@@ -313,7 +313,7 @@ export default function AdminProducts() {
     display: "block", fontSize: "0.6rem", fontWeight: 500,
     letterSpacing: "2px", textTransform: "uppercase",
     color: "var(--ink-muted)", marginBottom: "0.4rem",
-    fontFamily: "'Jost', sans-serif",
+    fontFamily: "'Open Sans', sans-serif",
   };
 
   // ── Not connected — show setup guide ──────────────────────
@@ -335,17 +335,17 @@ export default function AdminProducts() {
       {/* ── Header ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.8rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.8rem", fontWeight: 400, color: "var(--ink)" }}>
+          <h1 style={{ fontFamily: "'Lato', 'Open Sans', sans-serif", fontSize: "1.8rem", fontWeight: 400, color: "var(--ink)" }}>
             Products
           </h1>
-          <p style={{ fontSize: "0.73rem", color: "var(--ink-faint)", marginTop: "2px", fontFamily: "'Jost', sans-serif" }}>
+          <p style={{ fontSize: "0.73rem", color: "var(--ink-faint)", marginTop: "2px", fontFamily: "'Open Sans', sans-serif" }}>
             {products.length} listings ·{" "}
             <span style={{ color: "var(--green)" }}>🟢 API connected</span>
           </p>
         </div>
-        <button
+          <button
           onClick={openAdd}
-          style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--gold)", color: "white", border: "none", padding: "11px 22px", fontFamily: "'Jost', sans-serif", fontSize: "0.72rem", fontWeight: 500, letterSpacing: "1.5px", textTransform: "uppercase", cursor: "pointer", borderRadius: "2px" }}
+          style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--gold)", color: "white", border: "none", padding: "11px 22px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.72rem", fontWeight: 500, letterSpacing: "1.5px", textTransform: "uppercase", cursor: "pointer", borderRadius: "2px" }}
         >
           <Plus size={15} /> Add Product
         </button>
@@ -353,7 +353,7 @@ export default function AdminProducts() {
 
       {/* ── Cloudinary not configured warning ── */}
       {CLOUDINARY_CLOUD_NAME === "YOUR_CLOUD_NAME" && (
-        <div style={{ background: "#FEF9C3", border: "1px solid #FDE047", borderRadius: "4px", padding: "12px 16px", marginBottom: "1.5rem", fontSize: "0.8rem", fontFamily: "'Jost', sans-serif", color: "#713F12", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+        <div style={{ background: "#FEF9C3", border: "1px solid #FDE047", borderRadius: "4px", padding: "12px 16px", marginBottom: "1.5rem", fontSize: "0.8rem", fontFamily: "'Open Sans', sans-serif", color: "#713F12", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
           <span>⚠️</span>
           <span>
             <strong>Cloudinary not set up yet</strong> — Image upload is disabled. You can still add products using an image URL.{" "}
@@ -366,7 +366,7 @@ export default function AdminProducts() {
 
       {/* ── Loading ── */}
       {loading && (
-        <div style={{ textAlign: "center", padding: "4rem", color: "var(--ink-faint)", fontFamily: "'Jost', sans-serif" }}>
+        <div style={{ textAlign: "center", padding: "4rem", color: "var(--ink-faint)", fontFamily: "'Open Sans', sans-serif" }}>
           <Loader size={24} style={{ animation: "spin 1s linear infinite", display: "block", margin: "0 auto 1rem" }} />
           Loading products...
         </div>
@@ -374,9 +374,9 @@ export default function AdminProducts() {
 
       {/* ── Empty state ── */}
       {!loading && products.length === 0 && (
-        <div style={{ textAlign: "center", padding: "4rem", color: "var(--ink-faint)", fontFamily: "'Jost', sans-serif" }}>
+        <div style={{ textAlign: "center", padding: "4rem", color: "var(--ink-faint)", fontFamily: "'Open Sans', sans-serif" }}>
           <p style={{ fontSize: "0.9rem", marginBottom: "1.2rem" }}>No products yet. Add your first one!</p>
-          <button onClick={openAdd} style={{ background: "var(--gold)", color: "white", border: "none", padding: "11px 24px", fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", letterSpacing: "1.5px", textTransform: "uppercase", cursor: "pointer" }}>
+          <button onClick={openAdd} style={{ background: "var(--gold)", color: "white", border: "none", padding: "11px 24px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.75rem", letterSpacing: "1.5px", textTransform: "uppercase", cursor: "pointer" }}>
             + Add Product
           </button>
         </div>
@@ -395,23 +395,23 @@ export default function AdminProducts() {
                 />
               </div>
               <div style={{ padding: "12px 14px 14px" }}>
-                <div style={{ fontSize: "0.58rem", letterSpacing: "2px", textTransform: "uppercase", color: "var(--ink-faint)", marginBottom: "4px", fontFamily: "'Jost', sans-serif" }}>
+                <div style={{ fontSize: "0.58rem", letterSpacing: "2px", textTransform: "uppercase", color: "var(--ink-faint)", marginBottom: "4px", fontFamily: "'Open Sans', sans-serif" }}>
                   {p.category}
                 </div>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "0.95rem", marginBottom: "4px", color: "var(--ink)", lineHeight: 1.3 }}>
+                <div style={{ fontFamily: "'Lato', 'Open Sans', sans-serif", fontSize: "0.95rem", marginBottom: "4px", color: "var(--ink)", lineHeight: 1.3 }}>
                   {p.name}
                 </div>
-                <div style={{ fontSize: "0.85rem", color: "var(--gold)", fontWeight: 500, marginBottom: "10px", fontFamily: "'Jost', sans-serif" }}>
+                <div style={{ fontSize: "0.85rem", color: "var(--gold)", fontWeight: 500, marginBottom: "10px", fontFamily: "'Open Sans', sans-serif" }}>
                   ₹{Number(p.price).toLocaleString()}
                   <span style={{ fontSize: "0.72rem", color: "var(--ink-faint)", textDecoration: "line-through", marginLeft: "6px", fontWeight: 400 }}>
                     ₹{Number(p.mrp).toLocaleString()}
                   </span>
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={() => openEdit(p)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", background: "var(--ink)", color: "white", border: "none", padding: "7px 0", fontFamily: "'Jost', sans-serif", fontSize: "0.65rem", letterSpacing: "1px", textTransform: "uppercase", cursor: "pointer", borderRadius: "1px" }}>
+                  <button onClick={() => openEdit(p)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", background: "var(--ink)", color: "white", border: "none", padding: "7px 0", fontFamily: "'Open Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "1px", textTransform: "uppercase", cursor: "pointer", borderRadius: "1px" }}>
                     <Edit2 size={11} /> Edit
                   </button>
-                  <button onClick={() => setDeleteConfirm(p.id)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", background: "#FEE2E2", color: "#C0392B", border: "1px solid #FECACA", padding: "7px 0", fontFamily: "'Jost', sans-serif", fontSize: "0.65rem", letterSpacing: "1px", textTransform: "uppercase", cursor: "pointer", borderRadius: "1px" }}>
+                  <button onClick={() => setDeleteConfirm(p.id)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", background: "#FEE2E2", color: "#C0392B", border: "1px solid #FECACA", padding: "7px 0", fontFamily: "'Open Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "1px", textTransform: "uppercase", cursor: "pointer", borderRadius: "1px" }}>
                     <Trash2 size={11} /> Delete
                   </button>
                 </div>
@@ -475,7 +475,7 @@ export default function AdminProducts() {
                       onClick={() => setActiveTab(tab)}
                       style={{
                         padding: "7px 18px",
-                        fontFamily: "'Jost', sans-serif",
+                        fontFamily: "'Open Sans', sans-serif",
                         fontSize: "0.7rem", letterSpacing: "1px",
                         textTransform: "uppercase", cursor: "pointer",
                         border: "none",
@@ -493,9 +493,9 @@ export default function AdminProducts() {
                   <div>
                     {CLOUDINARY_CLOUD_NAME === "YOUR_CLOUD_NAME" ? (
                       /* Cloudinary not configured */
-                      <div style={{ background: "#FEF9C3", border: "1px solid #FDE047", borderRadius: "4px", padding: "12px 14px", fontSize: "0.78rem", fontFamily: "'Jost', sans-serif", color: "#713F12" }}>
+                      <div style={{ background: "#FEF9C3", border: "1px solid #FDE047", borderRadius: "4px", padding: "12px 14px", fontSize: "0.78rem", fontFamily: "'Open Sans', sans-serif", color: "#713F12" }}>
                         ⚠️ Image upload requires Cloudinary setup. Switch to{" "}
-                        <button onClick={() => setActiveTab("url")} style={{ background: "none", border: "none", color: "var(--gold)", fontWeight: 600, cursor: "pointer", fontFamily: "'Jost', sans-serif", fontSize: "0.78rem" }}>
+                        <button onClick={() => setActiveTab("url")} style={{ background: "none", border: "none", color: "var(--gold)", fontWeight: 600, cursor: "pointer", fontFamily: "'Open Sans', sans-serif", fontSize: "0.78rem" }}>
                           Image URL tab
                         </button>{" "}
                         and paste a link from{" "}
@@ -514,7 +514,7 @@ export default function AdminProducts() {
                           ) : (
                             <div style={{ textAlign: "center", color: "var(--ink-faint)" }}>
                               <Upload size={22} style={{ margin: "0 auto 4px" }} />
-                              <div style={{ fontSize: "0.65rem", fontFamily: "'Jost', sans-serif" }}>Click to pick</div>
+                              <div style={{ fontSize: "0.65rem", fontFamily: "'Open Sans', sans-serif" }}>Click to pick</div>
                             </div>
                           )}
                         </div>
@@ -523,13 +523,13 @@ export default function AdminProducts() {
                           <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImagePick} />
                           <button
                             onClick={() => fileRef.current?.click()}
-                            style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--cream2)", border: "1px solid var(--border)", padding: "9px 16px", fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", letterSpacing: "1px", textTransform: "uppercase", cursor: "pointer", color: "var(--ink-muted)", marginBottom: "8px", borderRadius: "2px" }}
+                            style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--cream2)", border: "1px solid var(--border)", padding: "9px 16px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.75rem", letterSpacing: "1px", textTransform: "uppercase", cursor: "pointer", color: "var(--ink-muted)", marginBottom: "8px", borderRadius: "2px" }}
                           >
                             <Upload size={13} /> Choose Image
                           </button>
 
                           {imageFile && (
-                            <div style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginBottom: "8px", fontFamily: "'Jost', sans-serif" }}>
+                            <div style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginBottom: "8px", fontFamily: "'Open Sans', sans-serif" }}>
                               📎 {imageFile.name}
                             </div>
                           )}
@@ -539,7 +539,7 @@ export default function AdminProducts() {
                             <button
                               onClick={handleUploadNow}
                               disabled={uploadingImage}
-                              style={{ display: "flex", alignItems: "center", gap: "6px", background: uploadingImage ? "var(--ink-faint)" : "var(--gold)", color: "white", border: "none", padding: "9px 16px", fontFamily: "'Jost', sans-serif", fontSize: "0.75rem", letterSpacing: "1px", textTransform: "uppercase", cursor: uploadingImage ? "not-allowed" : "pointer", borderRadius: "2px" }}
+                              style={{ display: "flex", alignItems: "center", gap: "6px", background: uploadingImage ? "var(--ink-faint)" : "var(--gold)", color: "white", border: "none", padding: "9px 16px", fontFamily: "'Open Sans', sans-serif", fontSize: "0.75rem", letterSpacing: "1px", textTransform: "uppercase", cursor: uploadingImage ? "not-allowed" : "pointer", borderRadius: "2px" }}
                             >
                               {uploadingImage
                                 ? <><Loader size={12} style={{ animation: "spin 1s linear infinite" }} /> Uploading...</>
@@ -549,7 +549,7 @@ export default function AdminProducts() {
                           )}
 
                           {form.imageUrl && (
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#D1FAE5", border: "1px solid #6EE7B7", borderRadius: "4px", padding: "7px 12px", fontSize: "0.75rem", fontFamily: "'Jost', sans-serif", color: "#065F46" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#D1FAE5", border: "1px solid #6EE7B7", borderRadius: "4px", padding: "7px 12px", fontSize: "0.75rem", fontFamily: "'Open Sans', sans-serif", color: "#065F46" }}>
                               ✓ Image uploaded successfully
                             </div>
                           )}

@@ -7,12 +7,12 @@ export default function OrderSuccess() {
   const orderId = location.state?.orderId || "BG-XXXXXX";
 
   return (
-    <div className="page-enter max-w-2xl mx-auto px-6 py-24 text-center">
+    <div className="page-enter max-w-2xl mx-auto px-6 py-24 text-center animate-section">
       <div className="w-20 h-20 rounded-full border-[1.5px] border-gold flex items-center justify-center text-3xl mx-auto mb-8">
         ✓
       </div>
-      <h1 className="font-serif text-[2.5rem] font-normal text-ink mb-3">Order Confirmed!</h1>
-      <p className="font-sans text-[0.88rem] font-light text-ink-muted leading-relaxed mb-10">
+      <h1 className="font-serif text-[2.5rem] font-normal text-ink mb-3 animate-item">Order Confirmed!</h1>
+      <p className="font-sans text-[0.88rem] font-light text-ink-muted leading-relaxed mb-10 animate-item">
         Your order has been sent to Blessing Gifts via WhatsApp.<br />
         You will receive a call or message shortly to confirm your order.
       </p>

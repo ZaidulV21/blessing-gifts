@@ -16,7 +16,7 @@ export default function ProductCard({ product, onClick }) {
       style: {
         background: "#111010",
         color: "#fff",
-        fontFamily: "'Jost', sans-serif",
+        fontFamily: "'Open Sans', sans-serif",
         fontSize: "0.82rem",
         letterSpacing: "0.3px",
         borderLeft: "2px solid #B8912A",
@@ -29,7 +29,7 @@ export default function ProductCard({ product, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white cursor-pointer group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+      className="bg-white cursor-pointer group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 animate-item"
     >
       {/* Image */}
       <div className="relative h-[280px] overflow-hidden bg-cream-2">
