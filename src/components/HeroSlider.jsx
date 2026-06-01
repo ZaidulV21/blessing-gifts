@@ -19,7 +19,7 @@ export default function HeroSlider({ slides = defaultSlides }) {
   }, [safeSlides.length]);
 
   return (
-    <section className="relative h-screen w-full overflow-hidden">
+    <section className="relative w-full overflow-hidden min-h-[60vh] md:h-screen">
       {safeSlides.map((slide, index) => (
         <div
           key={slide.id || index}

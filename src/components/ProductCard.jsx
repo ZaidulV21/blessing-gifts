@@ -32,7 +32,7 @@ export default function ProductCard({ product, onClick }) {
       className="bg-white cursor-pointer group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 animate-item"
     >
       {/* Image */}
-      <div className="relative h-[280px] overflow-hidden bg-cream-2">
+      <div className="relative product-card-img h-[220px] md:h-[280px] overflow-hidden bg-cream-2">
         <img
           src={product.imageUrl}
           alt={product.name}

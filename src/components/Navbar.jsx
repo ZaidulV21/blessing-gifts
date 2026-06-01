@@ -114,7 +114,7 @@ export default function Navbar() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { navigate(`/shop?q=${encodeURIComponent(searchQuery)}`); setSearchOpen(false); setSearchQuery(""); } }}
                   placeholder="Search products..."
-                  style={{ width: 220, padding: "8px 10px", borderRadius: 6, border: "1px solid var(--border)", fontFamily: "'Open Sans', sans-serif" }}
+                  style={{ width: 'min(220px, calc(100vw - 120px))', padding: "8px 10px", borderRadius: 6, border: "1px solid var(--border)", fontFamily: "'Open Sans', sans-serif" }}
                 />
               ) : (
                 <button onClick={() => setSearchOpen(true)} title="Search" style={{ width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer' }}>
