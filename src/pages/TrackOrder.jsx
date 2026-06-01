@@ -62,7 +62,7 @@ export default function TrackOrder() {
           />
           <button
             onClick={track}
-            className="bg-ink text-white px-5 flex items-center gap-2 font-sans text-[0.72rem] tracking-[1.5px] uppercase hover:bg-gold transition-colors"
+            className="bg-ink text-white px-5 bg-black flex items-center gap-2 font-sans text-[0.72rem] tracking-[1.5px] uppercase hover:bg-gold transition-colors"
           >
             <Search size={14} />
             Track

@@ -193,7 +193,7 @@ export default function Cart() {
           </div>
           <button
             onClick={() => navigate("/checkout")}
-            className="w-full bg-ink text-white mt-6 py-3.5 font-sans text-[0.75rem] font-medium tracking-[2px] uppercase flex items-center justify-center gap-2 hover:bg-gold transition-colors"
+            className="w-full bg-ink text-white bg-black mt-6 py-3.5 font-sans text-[0.75rem] font-medium tracking-[2px] uppercase flex items-center justify-center gap-2 hover:bg-gold transition-colors"
           >
             Proceed to Checkout <ArrowRight size={14} />
           </button>
