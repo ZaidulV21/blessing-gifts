@@ -14,6 +14,7 @@
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.22.0",
     "react-scripts": "^5.0.1",
+    "recharts": "^3.8.1",
     "swiper": "^12.1.4"
   },
   "scripts": {
@@ -23,6 +24,7 @@
     "server": "npm --prefix server run dev",
     "deploy": "npm run build"
   },
+  "proxy": "http://localhost:5000",
   "browserslist": {
     "production": [
       ">0.2%",

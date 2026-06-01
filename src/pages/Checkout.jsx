@@ -14,7 +14,7 @@ import {
 import toast from "react-hot-toast";
 
 export default function Checkout() {
-  const { cart, cartSubtotal, clearCart } = useCart();
+  const { cart, cartSubtotal, coupon, clearCart } = useCart();
   const navigate = useNavigate();
   const [payment, setPayment] = useState("COD");
   const [errors, setErrors] = useState({});
@@ -35,7 +35,9 @@ export default function Checkout() {
   });
 
   const delivery = cartSubtotal >= 999 ? 0 : 60;
-  const total = cartSubtotal + delivery;
+  const baseTotal = cartSubtotal + delivery;
+  const discount = coupon?.finalDiscount || 0;
+  const total = baseTotal - discount;
 
   // Helper: get value from controlled form state
   const val = (id) => {
@@ -346,6 +348,8 @@ export default function Checkout() {
         category: i.category,
       })),
       totalAmount: total,
+      couponCode: coupon?.code || null,
+      discountAmount: discount,
       payment,
       note,
     };
@@ -580,6 +584,14 @@ export default function Checkout() {
                   {delivery === 0 ? "FREE" : `₹${delivery}`}
                 </span>
               </div>
+              {coupon && (
+                <div className="flex justify-between font-sans text-[0.82rem] mb-2" style={{ color: "#6EE7B7" }}>
+                  <span>
+                    Discount ({coupon.discountType === "percentage" ? `${coupon.discountValue}%` : "Fixed"})
+                  </span>
+                  <span>-₹{discount.toLocaleString()}</span>
+                </div>
+              )}
               <div
                 className="flex justify-between font-serif text-[1.05rem] pt-2 mt-1"
                 style={{ borderTop: "1px solid rgba(255,255,255,0.1)", color: "white" }}

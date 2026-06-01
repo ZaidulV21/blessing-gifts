@@ -12,9 +12,21 @@ export function CartProvider({ children }) {
     }
   });
 
+  const [coupon, setCoupon] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("bg_coupon") || "null");
+    } catch {
+      return null;
+    }
+  });
+
   useEffect(() => {
     localStorage.setItem("bg_cart", JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    localStorage.setItem("bg_coupon", JSON.stringify(coupon));
+  }, [coupon]);
 
   const addToCart = (product, qty = 1) => {
     setCart((prev) => {
@@ -41,12 +53,26 @@ export function CartProvider({ children }) {
 
   const clearCart = () => setCart([]);
 
+  const applyCoupon = (couponData) => setCoupon(couponData);
+  const removeCoupon = () => setCoupon(null);
+
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const cartSubtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
   return (
     <CartContext.Provider
-      value={{ cart, addToCart, removeFromCart, updateQty, clearCart, cartCount, cartSubtotal }}
+      value={{
+        cart,
+        coupon,
+        addToCart,
+        removeFromCart,
+        updateQty,
+        clearCart,
+        applyCoupon,
+        removeCoupon,
+        cartCount,
+        cartSubtotal,
+      }}
     >
       {children}
     </CartContext.Provider>

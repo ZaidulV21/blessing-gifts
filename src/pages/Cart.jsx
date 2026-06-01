@@ -1,13 +1,56 @@
 // src/pages/Cart.jsx
 import { useNavigate } from "react-router-dom";
-import { Minus, Plus, Trash2, ArrowRight } from "lucide-react";
+import { Minus, Plus, Trash2, ArrowRight, X } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { validateCoupon } from "../services/api";
+import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function Cart() {
-  const { cart, updateQty, removeFromCart, cartSubtotal } = useCart();
+  const { cart, updateQty, removeFromCart, cartSubtotal, coupon, applyCoupon, removeCoupon } = useCart();
   const navigate = useNavigate();
+  const [couponCode, setCouponCode] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const delivery = cartSubtotal >= 999 ? 0 : 60;
-  const total = cartSubtotal + delivery;
+  const baseTotal = cartSubtotal + delivery;
+  const discount = coupon?.finalDiscount || 0;
+  const total = baseTotal - discount;
+
+  const handleValidateCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error("Please enter a coupon code", {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" },
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await validateCoupon(couponCode.toUpperCase(), baseTotal);
+      applyCoupon({
+        code: result.code,
+        finalDiscount: result.finalDiscount,
+        discountType: result.discountType,
+        discountValue: result.discountValue,
+      });
+      toast.success(`Coupon "${result.code}" applied successfully!`, {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" },
+      });
+      setCouponCode("");
+    } catch (error) {
+      toast.error(error.message || "Invalid coupon code", {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" },
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    setCouponCode("");
+  };
 
   if (!cart.length) {
     return (
@@ -92,9 +135,61 @@ export default function Cart() {
               </div>
             )}
           </div>
+
+          {/* Coupon Section */}
+          <div className="bg-gold-xpale border border-gold-light rounded-sm p-4 mb-4">
+            {coupon ? (
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-sans text-[0.75rem] font-medium text-ink-muted mb-1">COUPON APPLIED</div>
+                  <div className="font-serif text-[1rem] font-normal text-green-600">
+                    -{coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `₹${coupon.finalDiscount}`}
+                  </div>
+                  <div className="font-sans text-[0.65rem] text-ink-faint mt-1">{coupon.code}</div>
+                </div>
+                <button
+                  onClick={handleRemoveCoupon}
+                  className="text-ink-faint hover:text-red-500 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-[0.62rem] font-medium tracking-[2px] uppercase text-ink-muted mb-2 font-sans">
+                  Have a coupon?
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    disabled={loading}
+                    className="flex-1 px-3 py-2 border border-gold text-[0.85rem] font-sans rounded-sm outline-none focus:border-gold-light disabled:opacity-50"
+                  />
+                  <button
+                    onClick={handleValidateCoupon}
+                    disabled={loading || !couponCode.trim()}
+                    className="px-4 py-2 bg-gold text-white font-sans text-[0.75rem] font-medium rounded-sm hover:bg-gold-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "..." : "Apply"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex justify-between font-serif text-[1.05rem] border-t border-border pt-4 mt-2">
             <span>Total</span>
-            <span>₹{total.toLocaleString()}</span>
+            <div className="text-right">
+              {discount > 0 && (
+                <div className="text-[0.75rem] text-green-600 font-sans mb-1">
+                  Saved: ₹{discount.toLocaleString()}
+                </div>
+              )}
+              <span>₹{total.toLocaleString()}</span>
+            </div>
           </div>
           <button
             onClick={() => navigate("/checkout")}

@@ -24,6 +24,8 @@ const orderSchema = new mongoose.Schema(
     items: { type: [orderItemSchema], default: [] },
     totalAmount: { type: Number, required: true },
     total: { type: Number, required: true },
+    couponCode: { type: String, default: null, trim: true },
+    discountAmount: { type: Number, default: 0 },
     payment: { type: String, default: "COD" },
     paymentStatus: {
       type: String,
@@ -36,7 +38,7 @@ const orderSchema = new mongoose.Schema(
     note: { type: String, default: "" },
     status: {
       type: String,
-      enum: ["Pending", "Confirmed", "Shipped", "Delivered"],
+      enum: ["Pending", "Confirmed", "Packed", "Shipped", "Delivered", "Cancelled"],
       default: "Pending",
     },
     trackingLink: { type: String, default: "" },
