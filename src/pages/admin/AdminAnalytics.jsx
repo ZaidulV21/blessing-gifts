@@ -10,21 +10,18 @@ export default function AdminAnalytics() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAnalytics();
+    (async () => {
+      try {
+        const { getAnalytics } = await import("../../services/api");
+        const data = await getAnalytics();
+        setAnalytics(data || null);
+      } catch (err) {
+        console.error("Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
-
-  const fetchAnalytics = async () => {
-    try {
-      const response = await fetch("/api/settings/analytics");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-      setAnalytics(data);
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (

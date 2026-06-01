@@ -8,6 +8,7 @@ import RevenueChart from "../../components/admin/RevenueChart";
 import TopProducts from "../../components/admin/TopProducts";
 import Badge from "../../components/admin/Badge";
 import toast from "react-hot-toast";
+import { getAnalytics } from "../../services/api";
 
 export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState(null);
@@ -27,11 +28,8 @@ export default function AdminDashboard() {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/settings/analytics");
-      if (!response.ok) throw new Error("Failed to fetch analytics");
-
-      const data = await response.json();
-      setAnalytics(data);
+      const data = await getAnalytics();
+      setAnalytics(data || null);
       setStats({
         totalRevenue: data.totalRevenue || 0,
         totalOrders: data.totalOrders || 0,

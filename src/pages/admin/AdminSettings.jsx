@@ -24,10 +24,9 @@ export default function AdminSettings() {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/settings");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-      setSettings(data);
+      const { getSettings } = await import("../../services/api");
+      const data = await getSettings();
+      setSettings(data || {});
     } catch (error) {
       toast.error("Failed to load settings");
     } finally {
@@ -38,14 +37,10 @@ export default function AdminSettings() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const response = await fetch("/api/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
-      });
 
-      if (!response.ok) throw new Error("Failed to save");
-      toast.success("Settings saved successfully");
+      const { request } = await import("../../services/api");
+      await request("/api/settings", { method: "PUT", body: JSON.stringify(settings) });
+      toast.success("Settings saved");
     } catch (error) {
       toast.error("Failed to save settings");
     } finally {

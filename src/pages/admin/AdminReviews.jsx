@@ -19,10 +19,9 @@ export default function AdminReviews() {
   const fetchReviews = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/reviews?status=pending");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-      setReviews(data);
+      const { getReviews } = await import("../../services/api");
+      const data = await getReviews("pending");
+      setReviews(data || []);
     } catch (error) {
       toast.error("Failed to load reviews");
     } finally {
@@ -33,8 +32,8 @@ export default function AdminReviews() {
   const updateReviewStatus = async (id, status) => {
     try {
       const endpoint = status === "approved" ? `approve` : `reject`;
-      const response = await fetch(`/api/reviews/${id}/${endpoint}`, { method: "POST" });
-      if (!response.ok) throw new Error("Failed to update");
+      const { request } = await import("../../services/api");
+      await request(`/api/reviews/${id}/${endpoint}`, { method: "POST" });
       toast.success(`Review ${status}`);
       fetchReviews();
     } catch (error) {
@@ -46,8 +45,8 @@ export default function AdminReviews() {
     if (!window.confirm("Delete this review?")) return;
 
     try {
-      const response = await fetch(`/api/reviews/${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("Failed to delete");
+      const { request } = await import("../../services/api");
+      await request(`/api/reviews/${id}`, { method: "DELETE" });
       toast.success("Review deleted");
       fetchReviews();
     } catch (error) {

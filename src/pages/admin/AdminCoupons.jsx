@@ -30,10 +30,9 @@ export default function AdminCoupons() {
   const fetchCoupons = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/coupons");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-      setCoupons(data);
+      const { getCoupons } = await import("../../services/api");
+      const data = await getCoupons();
+      setCoupons(data || []);
     } catch (error) {
       toast.error("Failed to load coupons");
     } finally {
@@ -48,13 +47,8 @@ export default function AdminCoupons() {
       const method = editingId ? "PUT" : "POST";
       const url = editingId ? `/api/coupons/${editingId}` : "/api/coupons";
 
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) throw new Error("Failed to save");
+      const { request } = await import("../../services/api");
+      await request(url, { method, body: JSON.stringify(formData) });
 
       toast.success(editingId ? "Coupon updated" : "Coupon created");
       setShowForm(false);
@@ -79,8 +73,8 @@ export default function AdminCoupons() {
     if (!window.confirm("Delete this coupon?")) return;
 
     try {
-      const response = await fetch(`/api/coupons/${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("Failed to delete");
+      const { request } = await import("../../services/api");
+      await request(`/api/coupons/${id}`, { method: "DELETE" });
       toast.success("Coupon deleted");
       fetchCoupons();
     } catch (error) {

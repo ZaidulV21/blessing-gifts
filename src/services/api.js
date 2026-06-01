@@ -202,3 +202,21 @@ export async function validateCoupon(code, orderAmount) {
     body: JSON.stringify({ code, orderAmount }),
   });
 }
+
+// Admin helpers
+export async function getAnalytics() {
+  return request("/api/settings/analytics");
+}
+
+export async function getSettings() {
+  return request("/api/settings");
+}
+
+export async function getCoupons() {
+  return request("/api/coupons");
+}
+
+export async function getReviews(status = "") {
+  const q = status ? `?status=${encodeURIComponent(status)}` : "";
+  return request(`/api/reviews${q}`);
+}

@@ -19,9 +19,8 @@ export default function AdminCustomers() {
     try {
       setLoading(true);
       // Fetch all orders to extract customers
-      const response = await fetch("/api/orders");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const orders = await response.json();
+      const { getOrders } = await import("../../services/api");
+      const orders = await getOrders();
 
       // Group customers by phone
       const customerMap = {};
