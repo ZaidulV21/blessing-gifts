@@ -10,7 +10,7 @@ import HeroSlider from "../components/HeroSlider";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { products } = useProducts();
+  const { products, loading } = useProducts();
 
   const featuredCars = products.filter((p) => p.category === "Toy Cars").slice(0, 4);
   const newArrivals  = products.filter((p) => p.badge === "new").slice(0, 4);
@@ -41,6 +41,7 @@ export default function Home() {
     fontFamily: "'Open Sans', sans-serif",
     display: "flex", alignItems: "center", gap: "4px",
   };
+  const gridSkeleton = Array.from({ length: 4 });
 
   return (
     <div className="page-enter">
@@ -105,11 +106,27 @@ export default function Home() {
             See all cars <ArrowRight size={13} />
           </button>
         </div>
-        <div className="products-main-grid animate-item" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "2px" }}>
-          {featuredCars.map((p) => (
-            <ProductCard key={p.id} product={p} onClick={() => navigate(`/product/${p.id}`)} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="products-main-grid animate-item" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "2px" }}>
+            {gridSkeleton.map((_, index) => (
+              <div key={index} style={{ background: "#f5f1ea" }}>
+                <div style={{ aspectRatio: "1 / 1.05", background: "linear-gradient(90deg, #eee8dd 25%, #f7f3ec 37%, #eee8dd 63%)", backgroundSize: "400% 100%", animation: "shimmer 1.4s ease infinite" }} />
+                <div style={{ padding: "16px" }}>
+                  <div style={{ width: "70px", height: "10px", marginBottom: "12px", background: "#ebe3d6" }} />
+                  <div style={{ width: "85%", height: "18px", marginBottom: "10px", background: "#e7dfd0" }} />
+                  <div style={{ width: "60%", height: "14px", marginBottom: "14px", background: "#ece4d7" }} />
+                  <div style={{ width: "45%", height: "16px", background: "#e7dfd0" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="products-main-grid animate-item" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "2px" }}>
+            {featuredCars.map((p) => (
+              <ProductCard key={p.id} product={p} onClick={() => navigate(`/product/${p.id}`)} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── EDITORIAL BAND ───────────────────────────────────── */}
@@ -143,12 +160,30 @@ export default function Home() {
           <span className="animate-item" style={sectionLabel}>Just In</span>
           <h2 className="animate-item" style={sectionH2}>New <em style={{ fontStyle: "italic", fontWeight: 300 }}>Arrivals</em></h2>
         </div>
-        <div className="products-main-grid animate-item" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "2px" }}>
-          {newArrivals.map((p) => (
-            <ProductCard key={p.id} product={p} onClick={() => navigate(`/product/${p.id}`)} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="products-main-grid animate-item" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "2px" }}>
+            {gridSkeleton.map((_, index) => (
+              <div key={index} style={{ background: "#f5f1ea" }}>
+                <div style={{ aspectRatio: "1 / 1.05", background: "linear-gradient(90deg, #eee8dd 25%, #f7f3ec 37%, #eee8dd 63%)", backgroundSize: "400% 100%", animation: "shimmer 1.4s ease infinite" }} />
+                <div style={{ padding: "16px" }}>
+                  <div style={{ width: "70px", height: "10px", marginBottom: "12px", background: "#ebe3d6" }} />
+                  <div style={{ width: "85%", height: "18px", marginBottom: "10px", background: "#e7dfd0" }} />
+                  <div style={{ width: "60%", height: "14px", marginBottom: "14px", background: "#ece4d7" }} />
+                  <div style={{ width: "45%", height: "16px", background: "#e7dfd0" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="products-main-grid animate-item" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "2px" }}>
+            {newArrivals.map((p) => (
+              <ProductCard key={p.id} product={p} onClick={() => navigate(`/product/${p.id}`)} />
+            ))}
+          </div>
+        )}
       </div>
+
+      <style>{`@keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }`}</style>
     </div>
   );
 }

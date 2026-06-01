@@ -6,7 +6,7 @@ import { PRODUCTS as STATIC_PRODUCTS } from "../data/products";
 import { getProducts } from "../services/api";
 
 export function useProducts() {
-  const [products, setProducts] = useState(STATIC_PRODUCTS);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [source, setSource] = useState("api");
 

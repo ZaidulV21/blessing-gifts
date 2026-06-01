@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
-const defaultSlides = [
-  {
-    id: 1,
-    image: "/Gemini_Generated_Image_gfgtvbgfgtvbgfgt (1).png",
-    title: "Blessing Gifts",
-    subtitle: "Premium ride-on cars and toys for kids",
-  },
-];
+import defaultSlides from "../data/heroSlides";
 
 export default function HeroSlider({ slides = defaultSlides }) {
   const safeSlides = slides && slides.length ? slides : defaultSlides;
