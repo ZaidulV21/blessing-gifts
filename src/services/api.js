@@ -1,4 +1,4 @@
-const API_BASE_URL = (process.env.REACT_APP_API_URL || "http://localhost:5000").replace(/\/$/, "");
+const API_BASE_URL = (process.env.REACT_APP_API_URL || "https://blessing-gifts-api.onrender.com").replace(/\/$/, "");
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
