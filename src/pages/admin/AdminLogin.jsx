@@ -67,7 +67,7 @@ export default function AdminLogin() {
 
         <button
           onClick={handleLogin}
-          className="w-full bg-ink text-white py-3 font-sans text-[0.75rem] font-medium tracking-[2px] uppercase hover:bg-gold transition-colors mt-4 rounded-sm"
+          className="w-full bg-ink text-white bg-black py-3 font-sans text-[0.75rem] font-medium tracking-[2px] uppercase hover:bg-gold transition-colors mt-4 rounded-sm"
         >
           Enter Panel →
         </button>

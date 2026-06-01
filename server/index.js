@@ -4,6 +4,9 @@ import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import couponRoutes from "./routes/couponRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { seedDatabase } from "./utils/seedDatabase.js";
 
@@ -21,6 +24,9 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/coupons", couponRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/settings", settingsRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

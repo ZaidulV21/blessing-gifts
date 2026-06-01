@@ -191,3 +191,14 @@ export async function handlePaymentFailure(failureData) {
     body: JSON.stringify(failureData),
   });
 }
+
+/**
+ * Validate Coupon Code
+ * Validates coupon code and returns discount details
+ */
+export async function validateCoupon(code, orderAmount) {
+  return request("/api/coupons/validate", {
+    method: "POST",
+    body: JSON.stringify({ code, orderAmount }),
+  });
+}

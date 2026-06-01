@@ -48,7 +48,7 @@ export default function Home() {
       <HeroSlider />
 
       {/* ── TRUST STRIP ──────────────────────────────────────── */}
-      <div className="animate-section" style={{ background: "var(--ink)", padding: "12px 2rem" }}>
+      <div className="animate-section" style={{ background: "var(--ink)", padding: "12px 2rem", marginTop: "24px" }}>
         <div className="trust-inner animate-item" style={{ maxWidth: "1300px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: "2.5rem", flexWrap: "wrap" }}>
           {trust.map((t, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", color: "rgba(255,255,255,0.55)", fontSize: "0.68rem", letterSpacing: "1px", textTransform: "uppercase", fontFamily: "'Open Sans', sans-serif" }}>

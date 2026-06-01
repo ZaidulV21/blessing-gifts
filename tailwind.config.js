@@ -3,38 +3,31 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      colors: {
+        navy: "#0B1F3A",
+        "navy-2": "#1A2F5B",
+        gold: "#D4AF37",
+        "gold-soft": "#E6C76A",
+        orange: "#FF6B00",
+      },
       fontFamily: {
+        display: ['"Space Grotesk"', "Inter", "sans-serif"],
         serif: ["'Cormorant Garamond'", "Georgia", "serif"],
         sans: ["'Jost'", "sans-serif"],
       },
-      colors: {
-        gold: {
-          DEFAULT: "#B8912A",
-          light: "#D4A843",
-          pale: "#F5EDD6",
-          xpale: "#FBF7EE",
-          dark: "#8B6914",
-        },
-        cream: {
-          DEFAULT: "#FDFBF8",
-          2: "#F7F3EC",
-          3: "#EDE7DB",
-        },
-        ink: {
-          DEFAULT: "#111010",
-          soft: "#2A2520",
-          muted: "#6B6057",
-          faint: "#9A9088",
-        },
-        border: {
-          DEFAULT: "#E8E0D0",
-          soft: "#F0EAE0",
-        },
+      boxShadow: {
+        glow: "0 0 60px rgba(212, 175, 55, 0.35)",
+      },
+      backgroundImage: {
+        "gradient-gold": "linear-gradient(135deg, #D4AF37 0%, #E6C76A 100%)",
+        "gradient-mesh":
+          "radial-gradient(at 27% 37%, rgba(212,175,55,0.18) 0, transparent 50%), radial-gradient(at 97% 21%, rgba(255,107,0,0.18) 0, transparent 50%), radial-gradient(at 52% 99%, rgba(255,77,141,0.18) 0, transparent 50%), radial-gradient(at 10% 90%, rgba(26,47,91,0.4) 0, transparent 50%)",
       },
       animation: {
         "fade-up": "fadeUp 0.6s ease forwards",
         "fade-in": "fadeIn 0.4s ease forwards",
         "scroll-pulse": "scrollPulse 2s infinite",
+        signal: "signal 3s ease-out infinite",
       },
       keyframes: {
         fadeUp: {
@@ -48,6 +41,10 @@ module.exports = {
         scrollPulse: {
           "0%,100%": { opacity: 0.3 },
           "50%": { opacity: 1 },
+        },
+        signal: {
+          "0%": { transform: "scale(0.3)", opacity: "1" },
+          "100%": { transform: "scale(2.4)", opacity: "0" },
         },
       },
     },
