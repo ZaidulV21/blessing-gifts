@@ -1,4 +1,5 @@
 import Product from "../models/Product.js";
+import { getAvailableStock, resolveProductStatus, validateStockItems } from "../utils/stock.js";
 
 const normalizeFeatures = (features) => {
   if (Array.isArray(features)) {
@@ -52,7 +53,9 @@ const toClientProduct = (product) => ({
   related: Array.isArray(product.related) ? product.related : [],
   category: product.category,
   stock: product.stock,
-  inStock: product.inStock ?? product.stock > 0,
+  inStock: resolveProductStatus(product) !== "out_of_stock",
+  status: resolveProductStatus(product),
+  availableStock: getAvailableStock(product),
   badge: product.badge || "",
   features: product.features || [],
   rating: product.rating,
@@ -90,6 +93,8 @@ export async function createProduct(req, res, next) {
     const image = payload.image || payload.imageUrl || "";
     const images = normalizeImages(payload.images, image);
     const related = normalizeRelated(payload.related);
+    const stock = Number(payload.stock ?? (payload.inStock === false ? 0 : 10));
+    const inStock = payload.inStock ?? stock > 0;
 
     if (!payload.name || !payload.price || !payload.description || !payload.category) {
       return res.status(400).json({ message: "Name, price, description and category are required" });
@@ -105,9 +110,10 @@ export async function createProduct(req, res, next) {
       images,
       category: payload.category,
       related,
-      stock: Number(payload.stock ?? (payload.inStock === false ? 0 : 10)),
+      stock,
       badge: payload.badge || "",
-      inStock: payload.inStock ?? true,
+      inStock,
+      status: resolveProductStatus({ stock, inStock, status: payload.status }),
       features: normalizeFeatures(payload.features),
       rating: Number(payload.rating ?? 4.5),
       reviews: Number(payload.reviews ?? 0),
@@ -126,6 +132,14 @@ export async function updateProduct(req, res, next) {
     const image = payload.image || payload.imageUrl || "";
     const images = normalizeImages(payload.images, image);
     const related = normalizeRelated(payload.related);
+    const hasAvailabilityUpdate = payload.status !== undefined || payload.stock !== undefined || payload.inStock !== undefined;
+    const nextStatus = hasAvailabilityUpdate
+      ? resolveProductStatus({
+          stock: payload.stock !== undefined ? Number(payload.stock) : undefined,
+          inStock: payload.inStock,
+          status: payload.status,
+        })
+      : undefined;
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
@@ -142,6 +156,7 @@ export async function updateProduct(req, res, next) {
         stock: payload.stock !== undefined ? Number(payload.stock) : undefined,
         badge: payload.badge !== undefined ? payload.badge : undefined,
         inStock: payload.inStock,
+        status: nextStatus,
         features: payload.features !== undefined ? normalizeFeatures(payload.features) : undefined,
         rating: payload.rating !== undefined ? Number(payload.rating) : undefined,
         reviews: payload.reviews !== undefined ? Number(payload.reviews) : undefined,
@@ -168,6 +183,33 @@ export async function deleteProduct(req, res, next) {
     }
 
     res.json({ message: "Product deleted" });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function validateStock(req, res, next) {
+  try {
+    const items = Array.isArray(req.body?.items) ? req.body.items : [];
+
+    if (!items.length) {
+      return res.status(400).json({ message: "items are required" });
+    }
+
+    const validation = await validateStockItems(items);
+    const unavailable = validation.find((item) => !item.isAvailable);
+
+    if (unavailable) {
+      const message = validation.length > 1
+        ? "Some items in your cart are no longer available."
+        : unavailable.reason === "insufficient_stock"
+          ? "Maximum available stock reached."
+          : "This product is currently out of stock.";
+
+      return res.status(409).json({ message, items: validation });
+    }
+
+    res.json({ message: "Stock available", items: validation });
   } catch (error) {
     next(error);
   }

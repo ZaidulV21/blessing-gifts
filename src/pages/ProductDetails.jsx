@@ -5,6 +5,8 @@ import toast from "react-hot-toast";
 import { useCart } from "../context/CartContext";
 import { useProducts } from "../hooks/useProducts";
 import ProductCard from "../components/ProductCard";
+import { validateStock } from "../services/api";
+import { getAvailableStock, isOutOfStock } from "../utils/stock";
 
 // Build gallery from the product's full images array
 function buildProductGallery(product) {
@@ -19,7 +21,7 @@ export default function ProductDetails() {
   const navigate = useNavigate();
   const { productId } = useParams();
   const { products, loading } = useProducts();
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
   const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
@@ -31,6 +33,9 @@ export default function ProductDetails() {
     () => products.find((item) => String(item.id) === String(productId)),
     [products, productId]
   );
+  const existingQty = cart.find((item) => String(item.id) === String(product?.id))?.qty || 0;
+  const availableStock = getAvailableStock(product);
+  const outOfStock = isOutOfStock(product);
 
   // Use only product's uploaded images (dynamic from database)
   const gallery = useMemo(() => (product ? buildProductGallery(product) : []), [product]);
@@ -45,10 +50,25 @@ export default function ProductDetails() {
     [products, product]
   );
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product) return;
-    addToCart(product, 1);
-    toast.success(`${product.name} added to cart`);
+
+    if (outOfStock) {
+      toast.error("This product is currently out of stock.", {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" },
+      });
+      return;
+    }
+
+    try {
+      await validateStock([{ productId: product.id, qty: existingQty + 1 }]);
+      addToCart(product, 1);
+      toast.success(`${product.name} added to cart`);
+    } catch (error) {
+      toast.error(existingQty > 0 ? "Maximum available stock reached." : (error.message || "This product is currently out of stock."), {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" },
+      });
+    }
   };
 
   if (loading && !product) {
@@ -125,7 +145,10 @@ export default function ProductDetails() {
               <div style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.62rem", letterSpacing: "2.5px", textTransform: "uppercase", color: "var(--gold)", marginBottom: "0.5rem" }}>{product.category}</div>
               <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(2rem, 4vw, 3.1rem)", lineHeight: 1.05, fontWeight: 400, color: "var(--ink)", margin: 0 }}>{product.name}</h1>
             </div>
-            {product.badge ? <span style={{ background: "var(--ink)", color: "white", fontFamily: "'Jost', sans-serif", fontSize: "0.62rem", letterSpacing: "2px", textTransform: "uppercase", padding: "0.5rem 0.75rem", borderRadius: "999px" }}>{product.badge}</span> : null}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+              {product.badge ? <span style={{ background: "var(--ink)", color: "white", fontFamily: "'Jost', sans-serif", fontSize: "0.62rem", letterSpacing: "2px", textTransform: "uppercase", padding: "0.5rem 0.75rem", borderRadius: "999px" }}>{product.badge}</span> : null}
+              {outOfStock ? <span style={{ background: "#111010", color: "white", fontFamily: "'Jost', sans-serif", fontSize: "0.62rem", letterSpacing: "2px", textTransform: "uppercase", padding: "0.5rem 0.75rem", borderRadius: "999px" }}>Out of Stock</span> : null}
+            </div>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem", flexWrap: "wrap" }}>
@@ -135,7 +158,7 @@ export default function ProductDetails() {
               ))}
             </div>
             <span style={{ fontFamily: "'Jost', sans-serif", color: "var(--ink-muted)", fontSize: "0.82rem" }}>{product.rating} rating · {product.reviews} reviews</span>
-            <span style={{ fontFamily: "'Jost', sans-serif", color: "var(--ink-faint)", fontSize: "0.8rem" }}>{product.inStock ? "In stock" : "Out of stock"}</span>
+            <span style={{ fontFamily: "'Jost', sans-serif", color: "var(--ink-faint)", fontSize: "0.8rem" }}>{outOfStock ? "Out of stock" : `${availableStock} available`}</span>
           </div>
 
           <div style={{ display: "flex", alignItems: "baseline", gap: "0.8rem", marginBottom: "1rem", flexWrap: "wrap" }}>
@@ -157,11 +180,24 @@ export default function ProductDetails() {
 
           <div   className="product-actions"
  style={{ display: "flex", gap: "0.85rem", flexWrap: "wrap", marginBottom: "1.25rem" }}>
-            <button onClick={handleAddToCart} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", border: "none", background: "var(--gold)", color: "white", padding: "0.95rem 1.35rem", borderRadius: "12px", cursor: "pointer", fontFamily: "'Jost', sans-serif", letterSpacing: "1.5px", textTransform: "uppercase", fontSize: "0.72rem" }}>
-              <ShoppingBag size={15} /> Add to cart
+            <button onClick={handleAddToCart} disabled={outOfStock} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", border: "none", background: outOfStock ? "#111010" : "var(--gold)", color: "white", padding: "0.95rem 1.35rem", borderRadius: "12px", cursor: outOfStock ? "not-allowed" : "pointer", fontFamily: "'Jost', sans-serif", letterSpacing: "1.5px", textTransform: "uppercase", fontSize: "0.72rem", opacity: outOfStock ? 0.65 : 1 }}>
+              <ShoppingBag size={15} /> {outOfStock ? "Out of Stock" : "Add to cart"}
             </button>
-            <button onClick={() => { addToCart(product, 1); navigate("/checkout"); }} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", border: "1px solid var(--border)", background: "white", color: "var(--ink)", padding: "0.95rem 1.35rem", borderRadius: "12px", cursor: "pointer", fontFamily: "'Jost', sans-serif", letterSpacing: "1.5px", textTransform: "uppercase", fontSize: "0.72rem" }}>
-              Buy now
+            <button onClick={async () => {
+              if (outOfStock) {
+                toast.error("This product is currently out of stock.", { style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" } });
+                return;
+              }
+
+              try {
+                await validateStock([{ productId: product.id, qty: existingQty + 1 }]);
+                addToCart(product, 1);
+                navigate("/checkout");
+              } catch (error) {
+                toast.error(existingQty > 0 ? "Maximum available stock reached." : (error.message || "This product is currently out of stock."), { style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" } });
+              }
+            }} disabled={outOfStock} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", border: "1px solid var(--border)", background: "white", color: "var(--ink)", padding: "0.95rem 1.35rem", borderRadius: "12px", cursor: outOfStock ? "not-allowed" : "pointer", fontFamily: "'Jost', sans-serif", letterSpacing: "1.5px", textTransform: "uppercase", fontSize: "0.72rem", opacity: outOfStock ? 0.65 : 1 }}>
+              {outOfStock ? "Out of Stock" : "Buy now"}
             </button>
           </div>
 
@@ -174,7 +210,7 @@ export default function ProductDetails() {
               </div>
               <div style={{ padding: "0.9rem", border: "1px solid var(--border-soft)", borderRadius: "14px" }}>
                 <div style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.62rem", letterSpacing: "2px", textTransform: "uppercase", color: "var(--ink-faint)", marginBottom: "0.4rem" }}>Availability</div>
-                <div style={{ fontFamily: "'Jost', sans-serif", color: "var(--ink)" }}>{product.inStock ? "Available now" : "Out of stock"}</div>
+                <div style={{ fontFamily: "'Jost', sans-serif", color: "var(--ink)" }}>{outOfStock ? "Out of stock" : `${availableStock} available`}</div>
               </div>
             </div>
 

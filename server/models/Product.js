@@ -13,6 +13,7 @@ const productSchema = new mongoose.Schema(
     stock: { type: Number, default: 0 },
     mrp: { type: Number, default: 0 },
     badge: { type: String, default: "" },
+    status: { type: String, enum: ["in_stock", "out_of_stock"], default: "in_stock" },
     inStock: { type: Boolean, default: true },
     features: { type: [String], default: [] },
     rating: { type: Number, default: 4.5 },

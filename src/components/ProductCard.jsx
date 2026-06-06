@@ -3,27 +3,46 @@ import { useState } from "react";
 import { Heart, Star } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import toast from "react-hot-toast";
+import { validateStock } from "../services/api";
+import { isOutOfStock } from "../utils/stock";
 
 export default function ProductCard({ product, onClick }) {
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
   const [wishlisted, setWishlisted] = useState(false);
   const discount = Math.round((1 - product.price / product.mrp) * 100);
+  const existingQty = cart.find((item) => item.id === product.id)?.qty || 0;
+  const outOfStock = isOutOfStock(product);
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.stopPropagation();
-    addToCart(product, 1);
-    toast.success(`${product.name} added to cart`, {
-      style: {
-        background: "#111010",
-        color: "#fff",
-        fontFamily: "'Open Sans', sans-serif",
-        fontSize: "0.82rem",
-        letterSpacing: "0.3px",
-        borderLeft: "2px solid #B8912A",
-        borderRadius: "2px",
-      },
-      icon: "✓",
-    });
+
+    if (outOfStock) {
+      toast.error("This product is currently out of stock.", {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem" },
+      });
+      return;
+    }
+
+    try {
+      await validateStock([{ productId: product.id, qty: existingQty + 1 }]);
+      addToCart(product, 1);
+      toast.success(`${product.name} added to cart`, {
+        style: {
+          background: "#111010",
+          color: "#fff",
+          fontFamily: "'Open Sans', sans-serif",
+          fontSize: "0.82rem",
+          letterSpacing: "0.3px",
+          borderLeft: "2px solid #B8912A",
+          borderRadius: "2px",
+        },
+        icon: "✓",
+      });
+    } catch (error) {
+      toast.error(existingQty > 0 ? "Maximum available stock reached." : (error.message || "This product is currently out of stock."), {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem" },
+      });
+    }
   };
 
   return (
@@ -39,6 +58,12 @@ export default function ProductCard({ product, onClick }) {
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
+
+        {outOfStock && (
+          <span className="absolute top-3 right-3 bg-black/85 text-white text-[0.6rem] font-sans font-medium tracking-[2px] uppercase px-2.5 py-1 rounded-sm">
+            Out of Stock
+          </span>
+        )}
 
         {/* Badge */}
         {product.badge && (
@@ -68,9 +93,10 @@ export default function ProductCard({ product, onClick }) {
         <div className="absolute bottom-0 left-0 right-0 bg-ink/90 py-3 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <button
             onClick={handleAddToCart}
+            disabled={outOfStock}
             className="text-[0.68rem] font-sans font-medium tracking-[2px] uppercase text-white hover:text-gold-light transition-colors"
           >
-            Add to Cart
+            {outOfStock ? "Out of Stock" : "Add to Cart"}
           </button>
         </div>
       </div>

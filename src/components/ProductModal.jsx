@@ -7,10 +7,15 @@ import { useState, useEffect } from "react";
 import { X, Star, Minus, Plus, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import toast from "react-hot-toast";
+import { validateStock } from "../services/api";
+import { getAvailableStock, isOutOfStock } from "../utils/stock";
 
 export default function ProductModal({ product, onClose }) {
   const [qty, setQty] = useState(1);
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
+  const existingQty = cart.find((item) => item.id === product?.id)?.qty || 0;
+  const availableStock = getAvailableStock(product);
+  const outOfStock = isOutOfStock(product);
 
   useEffect(() => {
     // Lock background scroll
@@ -27,17 +32,31 @@ export default function ProductModal({ product, onClose }) {
   if (!product) return null;
   const discount = Math.round((1 - product.price / product.mrp) * 100);
 
-  const handleAdd = () => {
-    addToCart(product, qty);
-    toast.success(`${product.name} × ${qty} added to cart`, {
-      style: {
-        background: "#111010", color: "#fff",
-        fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem",
-        borderLeft: "2px solid #B8912A", borderRadius: "2px",
-      },
-      icon: "✓",
-    });
-    onClose();
+  const handleAdd = async () => {
+    if (outOfStock) {
+      toast.error("This product is currently out of stock.", {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem" },
+      });
+      return;
+    }
+
+    try {
+      await validateStock([{ productId: product.id, qty: existingQty + qty }]);
+      addToCart(product, qty);
+      toast.success(`${product.name} × ${qty} added to cart`, {
+        style: {
+          background: "#111010", color: "#fff",
+          fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem",
+          borderLeft: "2px solid #B8912A", borderRadius: "2px",
+        },
+        icon: "✓",
+      });
+      onClose();
+    } catch (error) {
+      toast.error(existingQty > 0 ? "Maximum available stock reached." : (error.message || "This product is currently out of stock."), {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem" },
+      });
+    }
   };
 
   return (
@@ -53,6 +72,11 @@ export default function ProductModal({ product, onClose }) {
         {/* Image panel */}
         <div className="modal-img-panel">
           <img src={product.imageUrl} alt={product.name} />
+          {outOfStock && (
+            <span className="absolute top-4 right-4 bg-black/85 text-white text-[0.6rem] font-sans font-medium tracking-[2px] uppercase px-2.5 py-1 rounded-sm">
+              Out of Stock
+            </span>
+          )}
         </div>
 
         {/* Info panel */}
@@ -98,18 +122,38 @@ export default function ProductModal({ product, onClose }) {
 
           <div className="modal-qty-label">Quantity</div>
           <div className="modal-qty-ctrl">
-            <button onClick={() => setQty(Math.max(1, qty - 1))} className="modal-qty-btn">
+            <button onClick={() => setQty(Math.max(1, qty - 1))} className="modal-qty-btn" disabled={outOfStock}>
               <Minus size={13} />
             </button>
             <span className="modal-qty-val">{qty}</span>
-            <button onClick={() => setQty(qty + 1)} className="modal-qty-btn">
+            <button
+              onClick={() => {
+                if (availableStock <= 0) {
+                  toast.error("This product is currently out of stock.", {
+                    style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem" },
+                  });
+                  return;
+                }
+
+                if (qty >= availableStock) {
+                  toast.error("Maximum available stock reached.", {
+                    style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.82rem" },
+                  });
+                  return;
+                }
+
+                setQty(qty + 1);
+              }}
+              className="modal-qty-btn"
+              disabled={outOfStock}
+            >
               <Plus size={13} />
             </button>
           </div>
 
-          <button className="modal-add-btn" onClick={handleAdd}>
+          <button className="modal-add-btn" onClick={handleAdd} disabled={outOfStock}>
             <ShoppingBag size={15} />
-            Add to Cart
+            {outOfStock ? "Out of Stock" : "Add to Cart"}
           </button>
         </div>
       </div>

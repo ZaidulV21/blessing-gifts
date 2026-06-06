@@ -9,9 +9,42 @@ import {
   createOrder, 
   createPaymentOrder, 
   verifyRazorpayPayment, 
-  handlePaymentFailure 
+  handlePaymentFailure,
+  validateStock
 } from "../services/api";
 import toast from "react-hot-toast";
+
+// ── FIELD COMPONENT (outside Checkout to prevent remounting) ──
+const Field = ({ id, label, placeholder, type = "text", required = false, readOnly = false, value, onChange, errors, isProcessing }) => {
+  return (
+    <div className="mb-4">
+      <label className="block text-[0.62rem] font-medium tracking-[2px] uppercase text-ink-muted mb-2 font-sans">
+        {label} {required && <span className="text-red-400">*</span>}
+      </label>
+      <input
+        id={id}
+        type={type}
+        placeholder={placeholder}
+        readOnly={readOnly}
+        value={value}
+        disabled={isProcessing}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full px-4 py-2.5 border font-sans text-[0.88rem] outline-none transition-colors placeholder-ink-faint/50 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+          readOnly
+            ? "bg-cream-3 text-ink-faint border-border cursor-not-allowed"
+            : errors
+            ? "border-red-400 bg-red-50 focus:border-red-500"
+            : "border-border bg-cream focus:border-gold"
+        }`}
+      />
+      {errors && (
+        <p className="field-error text-[0.7rem] text-red-500 mt-1 font-sans">
+          {errors}
+        </p>
+      )}
+    </div>
+  );
+};
 
 export default function Checkout() {
   const { cart, cartSubtotal, coupon, clearCart } = useCart();
@@ -319,6 +352,15 @@ export default function Checkout() {
       return;
     }
 
+    try {
+      await validateStock(cart.map((item) => ({ productId: item.id, qty: item.qty })));
+    } catch (error) {
+      toast.error(error.message || "Some items in your cart are no longer available.", {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" },
+      });
+      return;
+    }
+
     const firstName = val("co-firstName");
     const lastName  = val("co-lastName");
     const phone     = val("co-phone");
@@ -374,38 +416,7 @@ export default function Checkout() {
     }
   };
 
-  // ── INPUT COMPONENT ───────────────────────────────────────────
-  const Field = ({ id, label, placeholder, type = "text", required = false, readOnly = false }) => {
-    const key = id.replace(/^co-/, "");
-    return (
-      <div className="mb-4">
-        <label className="block text-[0.62rem] font-medium tracking-[2px] uppercase text-ink-muted mb-2 font-sans">
-          {label} {required && <span className="text-red-400">*</span>}
-        </label>
-        <input
-          id={id}
-          type={type}
-          placeholder={placeholder}
-          readOnly={readOnly}
-          value={formData[key]}
-          disabled={isProcessing}
-          onChange={(e) => handleChange(key, e.target.value)}
-          className={`w-full px-4 py-2.5 border font-sans text-[0.88rem] outline-none transition-colors placeholder-ink-faint/50 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed ${
-            readOnly
-              ? "bg-cream-3 text-ink-faint border-border cursor-not-allowed"
-              : errors[key]
-              ? "border-red-400 bg-red-50 focus:border-red-500"
-              : "border-border bg-cream focus:border-gold"
-          }`}
-        />
-        {errors[key] && (
-          <p className="field-error text-[0.7rem] text-red-500 mt-1 font-sans">
-            {errors[key]}
-          </p>
-        )}
-      </div>
-    );
-  };
+
 
   return (
     <div className="page-enter max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16 animate-section">
@@ -429,12 +440,49 @@ export default function Checkout() {
               Customer Details
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-              <Field id="co-firstName" label="First Name" placeholder="Raj"         required />
-              <Field id="co-lastName"  label="Last Name"  placeholder="Sharma"      required />
+              <Field
+                id="co-firstName"
+                label="First Name"
+                placeholder="Raj"
+                required
+                value={formData.firstName}
+                onChange={(val) => handleChange("firstName", val)}
+                errors={errors.firstName}
+                isProcessing={isProcessing}
+              />
+              <Field
+                id="co-lastName"
+                label="Last Name"
+                placeholder="Sharma"
+                required
+                value={formData.lastName}
+                onChange={(val) => handleChange("lastName", val)}
+                errors={errors.lastName}
+                isProcessing={isProcessing}
+              />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-              <Field id="co-phone" label="Phone Number" placeholder="+91 98765 43210" type="tel" required />
-              <Field id="co-email" label="Email"        placeholder="raj@gmail.com"   type="email" />
+              <Field
+                id="co-phone"
+                label="Phone Number"
+                placeholder="+91 98765 43210"
+                type="tel"
+                required
+                value={formData.phone}
+                onChange={(val) => handleChange("phone", val)}
+                errors={errors.phone}
+                isProcessing={isProcessing}
+              />
+              <Field
+                id="co-email"
+                label="Email"
+                placeholder="raj@gmail.com"
+                type="email"
+                value={formData.email}
+                onChange={(val) => handleChange("email", val)}
+                errors={errors.email}
+                isProcessing={isProcessing}
+              />
             </div>
           </div>
 
@@ -443,15 +491,65 @@ export default function Checkout() {
             <h3 className="font-serif text-[1.05rem] font-normal text-ink mb-5 pb-4 border-b border-border-soft">
               Delivery Address
             </h3>
-            <Field id="co-addr1" label="Address Line 1" placeholder="House No, Street Name" required />
-            <Field id="co-addr2" label="Landmark / Locality" placeholder="Colony, Near landmark (optional)" />
+            <Field
+              id="co-addr1"
+              label="Address Line 1"
+              placeholder="House No, Street Name"
+              required
+              value={formData.addr1}
+              onChange={(val) => handleChange("addr1", val)}
+              errors={errors.addr1}
+              isProcessing={isProcessing}
+            />
+            <Field
+              id="co-addr2"
+              label="Landmark / Locality"
+              placeholder="Colony, Near landmark (optional)"
+              value={formData.addr2}
+              onChange={(val) => handleChange("addr2", val)}
+              errors={errors.addr2}
+              isProcessing={isProcessing}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-              <Field id="co-city"  label="City"  placeholder="Lucknow"       required />
-              <Field id="co-state" label="State" placeholder="Uttar Pradesh" required />
+              <Field
+                id="co-city"
+                label="City"
+                placeholder="Lucknow"
+                required
+                value={formData.city}
+                onChange={(val) => handleChange("city", val)}
+                errors={errors.city}
+                isProcessing={isProcessing}
+              />
+              <Field
+                id="co-state"
+                label="State"
+                placeholder="Uttar Pradesh"
+                required
+                value={formData.state}
+                onChange={(val) => handleChange("state", val)}
+                errors={errors.state}
+                isProcessing={isProcessing}
+              />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-              <Field id="co-pin"     label="PIN Code" placeholder="226001" required />
-              <Field id="co-country" label="Country"  defaultValue="India" readOnly />
+              <Field
+                id="co-pin"
+                label="PIN Code"
+                placeholder="226001"
+                required
+                value={formData.pin}
+                onChange={(val) => handleChange("pin", val)}
+                errors={errors.pin}
+                isProcessing={isProcessing}
+              />
+              <Field
+                id="co-country"
+                label="Country"
+                value={formData.country}
+                readOnly
+                isProcessing={isProcessing}
+              />
             </div>
             <div className="mb-4">
               <label className="block text-[0.62rem] font-medium tracking-[2px] uppercase text-ink-muted mb-2 font-sans">
@@ -462,6 +560,8 @@ export default function Checkout() {
                 placeholder="Any special delivery notes..."
                 rows={3}
                 disabled={isProcessing}
+                value={formData.note}
+                onChange={(e) => handleChange("note", e.target.value)}
                 className="w-full px-4 py-2.5 border border-border bg-cream font-sans text-[0.88rem] outline-none focus:border-gold rounded-sm resize-none placeholder-ink-faint/50 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>

@@ -5,6 +5,7 @@ import {
   verifyRazorpaySignature,
   fetchRazorpayPayment,
 } from "../utils/razorpayUtils.js";
+import { releaseStockItems, reserveStockItems, validateStockItems } from "../utils/stock.js";
 
 const normalizePhone = (phone = "") => phone.replace(/\D/g, "");
 
@@ -24,6 +25,7 @@ const toClientOrder = (order) => ({
   total: order.totalAmount,
   payment: order.payment || "COD",
   note: order.note || "",
+  inventoryRestoredAt: order.inventoryRestoredAt || null,
   status: order.status,
   trackingLink: order.trackingLink || "",
   date: order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN") : "—",
@@ -31,35 +33,105 @@ const toClientOrder = (order) => ({
   updatedAt: order.updatedAt,
 });
 
+const normalizeOrderItems = (items = []) => {
+  const merged = new Map();
+
+  for (const item of items) {
+    const productId = String(item?.productId || item?.id || "").trim();
+    const qty = Number(item?.qty ?? 0);
+
+    if (!productId || qty <= 0) {
+      continue;
+    }
+
+    const current = merged.get(productId) || { ...item, productId, qty: 0 };
+    current.qty += qty;
+    merged.set(productId, current);
+  }
+
+  return [...merged.values()];
+};
+
+const getStockErrorMessage = (validation) => {
+  if (!validation.length || validation.length > 1) {
+    return "Some items in your cart are no longer available.";
+  }
+
+  return validation[0].reason === "insufficient_stock"
+    ? "Maximum available stock reached."
+    : "This product is currently out of stock.";
+};
+
+const reserveOrderStock = async (items) => {
+  const validation = await validateStockItems(items);
+  const unavailable = validation.find((item) => !item.isAvailable);
+
+  if (unavailable) {
+    const error = new Error(getStockErrorMessage(validation));
+    error.statusCode = 409;
+    error.details = validation;
+    throw error;
+  }
+
+  const reservation = await reserveStockItems(items);
+
+  if (!reservation.success) {
+    const error = new Error("Some items in your cart are no longer available.");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  return validation;
+};
+
+const releaseOrderStock = async (order) => {
+  if (!order || order.inventoryRestoredAt) {
+    return;
+  }
+
+  await releaseStockItems(order.items || []);
+  order.inventoryRestoredAt = new Date();
+  await order.save();
+};
+
 export async function createOrder(req, res, next) {
   try {
     const payload = req.body;
     const customerName = payload.customerName || payload.customer || "";
     const phone = payload.phone || "";
     const address = payload.address || "";
-    const items = Array.isArray(payload.items) ? payload.items : [];
+    const items = normalizeOrderItems(Array.isArray(payload.items) ? payload.items : []);
     const totalAmount = Number(payload.totalAmount ?? payload.total ?? 0);
 
     if (!customerName || !phone || !address || !items.length || !totalAmount) {
       return res.status(400).json({ message: "customerName, phone, address, items and totalAmount are required" });
     }
 
-    const order = await Order.create({
-      orderId: payload.orderId || generateOrderId(),
-      customerName,
-      customer: customerName,
-      phone,
-      phoneDigits: normalizePhone(phone),
-      email: payload.email || "",
-      address,
-      items,
-      totalAmount,
-      total: totalAmount,
-      payment: payload.payment || "COD",
-      note: payload.note || "",
-      status: payload.status || "Pending",
-      trackingLink: payload.trackingLink || "",
-    });
+    await reserveOrderStock(items);
+
+    let order;
+
+    try {
+      order = await Order.create({
+        orderId: payload.orderId || generateOrderId(),
+        customerName,
+        customer: customerName,
+        phone,
+        phoneDigits: normalizePhone(phone),
+        email: payload.email || "",
+        address,
+        items,
+        totalAmount,
+        total: totalAmount,
+        payment: payload.payment || "COD",
+        note: payload.note || "",
+        status: payload.status || "Pending",
+        trackingLink: payload.trackingLink || "",
+      });
+    } catch (error) {
+      await releaseStockItems(items);
+      throw error;
+    }
 
     res.status(201).json(toClientOrder(order));
   } catch (error) {
@@ -151,7 +223,7 @@ export async function createPaymentOrder(req, res, next) {
     const customerName = payload.customerName || payload.customer || "";
     const phone = payload.phone || "";
     const address = payload.address || "";
-    const items = Array.isArray(payload.items) ? payload.items : [];
+    const items = normalizeOrderItems(Array.isArray(payload.items) ? payload.items : []);
     const totalAmount = Number(payload.totalAmount ?? payload.total ?? 0);
     const email = payload.email || "";
 
@@ -164,24 +236,32 @@ export async function createPaymentOrder(req, res, next) {
     // Generate order ID
     const orderId = payload.orderId || generateOrderId();
 
-    // Create order in DB with pending payment status
-    const order = await Order.create({
-      orderId,
-      customerName,
-      customer: customerName,
-      phone,
-      phoneDigits: normalizePhone(phone),
-      email,
-      address,
-      items,
-      totalAmount,
-      total: totalAmount,
-      payment: "Razorpay",
-      paymentStatus: "pending", // Payment not yet completed
-      note: payload.note || "",
-      status: "Pending", // Order status separate from payment status
-      trackingLink: "",
-    });
+    await reserveOrderStock(items);
+
+    let order;
+
+    try {
+      order = await Order.create({
+        orderId,
+        customerName,
+        customer: customerName,
+        phone,
+        phoneDigits: normalizePhone(phone),
+        email,
+        address,
+        items,
+        totalAmount,
+        total: totalAmount,
+        payment: "Razorpay",
+        paymentStatus: "pending", // Payment not yet completed
+        note: payload.note || "",
+        status: "Pending", // Order status separate from payment status
+        trackingLink: "",
+      });
+    } catch (error) {
+      await releaseStockItems(items);
+      throw error;
+    }
 
     // Create Razorpay order
     const razorpayResult = await createRazorpayOrder(
@@ -193,6 +273,7 @@ export async function createPaymentOrder(req, res, next) {
 
     if (!razorpayResult.success) {
       // Delete order if Razorpay order creation fails
+      await releaseStockItems(items);
       await Order.deleteOne({ _id: order._id });
       return res.status(400).json({
         message: "Failed to create payment order",
@@ -282,6 +363,7 @@ export async function verifyPayment(req, res, next) {
         order.status = "Confirmed"; // Auto-confirm order on successful payment
       } else {
         order.paymentStatus = "failed";
+        await releaseOrderStock(order);
       }
 
       await order.save();
@@ -314,6 +396,7 @@ export async function handlePaymentFailure(req, res, next) {
     });
 
     if (order) {
+      await releaseOrderStock(order);
       order.paymentStatus = "failed";
       order.razorpayPaymentId = razorpayPaymentId;
       await order.save();

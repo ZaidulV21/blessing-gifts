@@ -41,6 +41,8 @@ const normalizeProduct = (product) => ({
   category: product.category,
   stock: product.stock ?? (product.inStock ? 1 : 0),
   inStock: product.inStock ?? (product.stock > 0),
+  status: product.status || ((product.inStock ?? (product.stock > 0)) && (product.stock ?? 0) > 0 ? "in_stock" : "out_of_stock"),
+  availableStock: product.availableStock ?? (product.status === "out_of_stock" || product.inStock === false ? 0 : product.stock ?? 0),
   badge: product.badge || "",
   features: Array.isArray(product.features) ? product.features : [],
   rating: product.rating ?? 4.5,
@@ -101,6 +103,13 @@ export async function updateProduct(id, productData) {
 export async function deleteProduct(id) {
   return request(`/api/products/${encodeURIComponent(id)}`, {
     method: "DELETE",
+  });
+}
+
+export async function validateStock(items) {
+  return request("/api/products/stock/validate", {
+    method: "POST",
+    body: JSON.stringify({ items }),
   });
 }
 

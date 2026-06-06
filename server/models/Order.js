@@ -35,6 +35,7 @@ const orderSchema = new mongoose.Schema(
     razorpayOrderId: { type: String, index: true },
     razorpayPaymentId: { type: String },
     razorpaySignature: { type: String },
+    inventoryRestoredAt: { type: Date },
     note: { type: String, default: "" },
     status: {
       type: String,

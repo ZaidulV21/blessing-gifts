@@ -2,15 +2,33 @@
 import { useNavigate } from "react-router-dom";
 import { Minus, Plus, Trash2, ArrowRight, X } from "lucide-react";
 import { useCart } from "../context/CartContext";
-import { validateCoupon } from "../services/api";
-import { useState } from "react";
+import { validateCoupon, validateStock } from "../services/api";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useProducts } from "../hooks/useProducts";
+import { getAvailableStock, isOutOfStock } from "../utils/stock";
 
 export default function Cart() {
   const { cart, updateQty, removeFromCart, cartSubtotal, coupon, applyCoupon, removeCoupon } = useCart();
+  const { products } = useProducts();
   const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const latestProductMap = useMemo(() => new Map(products.map((product) => [String(product.id), product])), [products]);
+
+  useEffect(() => {
+    const hasUnavailableItems = cart.some((item) => {
+      const latest = latestProductMap.get(String(item.id)) || item;
+      return isOutOfStock(latest) || getAvailableStock(latest) < item.qty;
+    });
+
+    if (hasUnavailableItems) {
+      toast.error("Some items in your cart are no longer available.", {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" },
+      });
+    }
+  }, [cart, latestProductMap]);
 
   const delivery = cartSubtotal >= 999 ? 0 : 60;
   const baseTotal = cartSubtotal + delivery;
@@ -52,6 +70,37 @@ export default function Cart() {
     setCouponCode("");
   };
 
+  const getAvailability = (item) => {
+    const latest = latestProductMap.get(String(item.id)) || item;
+    const availableStock = getAvailableStock(latest);
+    return {
+      latest,
+      availableStock,
+      outOfStock: isOutOfStock(latest),
+    };
+  };
+
+  const handleIncrement = async (item) => {
+    const { availableStock, outOfStock } = getAvailability(item);
+    const desiredQty = item.qty + 1;
+
+    if (outOfStock || desiredQty > availableStock) {
+      toast.error("Maximum available stock reached.", {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" },
+      });
+      return;
+    }
+
+    try {
+      await validateStock([{ productId: item.id, qty: desiredQty }]);
+      updateQty(item.id, desiredQty);
+    } catch {
+      toast.error("Maximum available stock reached.", {
+        style: { fontFamily: "'Open Sans', sans-serif", fontSize: "0.83rem" },
+      });
+    }
+  };
+
   if (!cart.length) {
     return (
       <div className="page-enter max-w-7xl mx-auto px-6 py-20 text-center animate-section">
@@ -81,6 +130,10 @@ export default function Cart() {
         {/* Items */}
         <div className="bg-white border border-border-soft animate-item">
           {cart.map((item, i) => (
+            (() => {
+              const { availableStock, outOfStock } = getAvailability(item);
+
+              return (
             <div key={item.id} className={`flex gap-5 p-5 animate-item ${i < cart.length - 1 ? "border-b border-border-soft" : ""}`}>
               <div className="w-[84px] h-[84px] rounded-sm overflow-hidden bg-cream-2 flex-shrink-0">
                 <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
@@ -88,12 +141,17 @@ export default function Cart() {
               <div className="flex-1">
                 <div className="text-[0.6rem] font-sans tracking-[2px] uppercase text-ink-faint mb-1">{item.category}</div>
                 <div className="font-serif text-[1rem] font-normal text-ink mb-3">{item.name}</div>
+                <div className="text-[0.62rem] font-sans tracking-[1.5px] uppercase mb-3">
+                  <span className={`px-2.5 py-1 rounded-sm ${outOfStock ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"}`}>
+                    {outOfStock ? "Out of stock" : `${availableStock} available`}
+                  </span>
+                </div>
                 <div className="flex items-center border border-border rounded-sm w-fit overflow-hidden">
                   <button onClick={() => updateQty(item.id, item.qty - 1)} className="w-7 h-7 flex items-center justify-center hover:bg-cream-2 transition-colors">
                     <Minus size={12} className="text-ink-muted" />
                   </button>
                   <span className="w-8 text-center font-sans text-[0.82rem] font-medium border-x border-border">{item.qty}</span>
-                  <button onClick={() => updateQty(item.id, item.qty + 1)} className="w-7 h-7 flex items-center justify-center hover:bg-cream-2 transition-colors">
+                  <button onClick={() => handleIncrement(item)} className="w-7 h-7 flex items-center justify-center hover:bg-cream-2 transition-colors">
                     <Plus size={12} className="text-ink-muted" />
                   </button>
                 </div>
@@ -110,6 +168,8 @@ export default function Cart() {
                 </button>
               </div>
             </div>
+              );
+            })()
           ))}
         </div>
 
