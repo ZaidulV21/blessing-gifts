@@ -293,9 +293,6 @@ export default function Checkout() {
    */
   const handleCODOrder = async (orderData, orderId) => {
     try {
-      // Create order via existing flow
-      await createOrder(orderData);
-
       // Build WhatsApp message
       const msg =
         `🎁 *NEW ORDER — Blessing Gifts*\n\n` +
@@ -403,7 +400,7 @@ export default function Checkout() {
       // For Razorpay, let the backend generate the order ID
       await handleRazorpayPayment(orderData, orderId);
     } else {
-      // For COD, create order first
+      // For COD, create order first, then open WhatsApp confirmation
       try {
         const createdOrder = await createOrder(orderData);
         orderId = createdOrder.orderId || createdOrder.id;

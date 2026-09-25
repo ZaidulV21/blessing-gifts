@@ -1,5 +1,14 @@
 const API_BASE_URL = (process.env.REACT_APP_API_URL || "https://blessing-gifts-api.onrender.com").replace(/\/$/, "");
 
+class ApiError extends Error {
+  constructor(message, status, payload) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.payload = payload;
+  }
+}
+
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
@@ -13,7 +22,7 @@ async function request(path, options = {}) {
   const payload = isJson ? await response.json() : null;
 
   if (!response.ok) {
-    throw new Error(payload?.message || "Request failed");
+    throw new ApiError(payload?.message || "Request failed", response.status, payload);
   }
 
   return payload;
@@ -107,10 +116,39 @@ export async function deleteProduct(id) {
 }
 
 export async function validateStock(items) {
-  return request("/api/products/stock/validate", {
-    method: "POST",
-    body: JSON.stringify({ items }),
+  const products = await getProducts();
+  const productMap = new Map(products.map((product) => [String(product.id), product]));
+  const validation = items.map((item) => {
+    const productId = String(item?.productId || item?.id || "").trim();
+    const requestedQty = Number(item?.qty ?? 0);
+    const product = productMap.get(productId);
+    const availableStock = Number(product?.availableStock ?? 0);
+    const outOfStock = !product || product.status === "out_of_stock" || product.inStock === false;
+
+    return {
+      productId,
+      productName: product?.name || "Unknown product",
+      requestedQty,
+      availableStock: outOfStock ? 0 : availableStock,
+      status: outOfStock ? "out_of_stock" : product.status,
+      isAvailable: !outOfStock && requestedQty > 0 && availableStock >= requestedQty,
+      reason: outOfStock ? "out_of_stock" : availableStock < requestedQty ? "insufficient_stock" : "available",
+    };
   });
+
+  const unavailable = validation.find((item) => !item.isAvailable);
+
+  if (unavailable) {
+    const message = validation.length > 1
+      ? "Some items in your cart are no longer available."
+      : unavailable.reason === "insufficient_stock"
+        ? "Maximum available stock reached."
+        : "This product is currently out of stock.";
+
+    throw new ApiError(message, 409, { items: validation });
+  }
+
+  return { message: "Stock available", items: validation };
 }
 
 export async function createOrder(orderData) {
